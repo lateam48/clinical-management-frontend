@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Users, Receipt, MessageCircle } from "lucide-react"
+import { PatientManagement } from "../patients"
 
 export function SecretaryDashboard() {
     return (
@@ -54,6 +55,8 @@ export function SecretaryDashboard() {
                     </CardContent>
                 </Card>
             </div>
+
+            <PatientManagement />
         </div>
     )
 }

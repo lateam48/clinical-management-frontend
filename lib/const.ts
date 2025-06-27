@@ -1,5 +1,9 @@
 // const file to export query-key
 
 export const UsersCacheKeys = Object.freeze({
-    Users: 'users'
+  Users: 'users'
+})
+
+export const PatientsCacheKeys = Object.freeze({
+  Patients: 'patients'
 })
