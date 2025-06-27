@@ -55,15 +55,16 @@ export function PatientManagement() {
     }
   };
 
-  // Filtrage côté client
+  // Filtrage côté client avancé (tous les mots doivent être présents dans au moins un champ)
   const filteredPatients = getPatients.data?.filter((patient: PatientResponseData) => {
-    const q = search.toLowerCase();
-    return (
-      patient.lastName.toLowerCase().includes(q) ||
-      patient.firstName.toLowerCase().includes(q) ||
-      patient.phoneNumber.toLowerCase().includes(q) ||
-      patient.email.toLowerCase().includes(q)
-    );
+    const searchWords = search.toLowerCase().split(/\s+/).filter(Boolean);
+    const fields = [
+      patient.lastName.toLowerCase(),
+      patient.firstName.toLowerCase(),
+      patient.phoneNumber.toLowerCase(),
+      patient.email.toLowerCase()
+    ];
+    return searchWords.every(word => fields.some(field => field.includes(word)));
   });
 
   return (
