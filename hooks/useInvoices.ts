@@ -24,7 +24,7 @@ export const useInvoices = ({ patientId }: { patientId?: Patient['id'] }) => {
   })
 
   const getTotalPaid = useQuery({
-    queryKey: [InvoicesCacheKeys.Invoices],
+    queryKey: [InvoicesCacheKeys.Invoices, InvoicesCacheKeys.TotalPaid],
     queryFn: () => invoiceService.getTotalPaid(),
   })
 
