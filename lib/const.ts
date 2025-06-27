@@ -12,3 +12,7 @@ export const PatientsCacheKeys = Object.freeze({
 export const PrescriptionsCacheKeys = Object.freeze({
     Prescriptions: 'prescriptions'
 })
+
+export const HospitalCacheKeys = Object.freeze({
+    Hospital: 'hospital'
+})
