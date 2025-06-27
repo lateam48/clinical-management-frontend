@@ -34,7 +34,12 @@ export const InvoiceManagement: React.FC = () => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedInvoiceDetail, setSelectedInvoiceDetail] = useState<Invoice | null>(null);
 
-  const totalPaid = getTotalPaid.data ?? 0;
+  let invoices: Invoice[] = [];
+  if (tab === 'all') invoices = Array.isArray(getInvoices.data) ? getInvoices.data : [];
+  else if (tab === 'unpaid') invoices = Array.isArray(getUnpaidInvoices.data) ? getUnpaidInvoices.data : [];
+  else if (tab === 'paid') invoices = Array.isArray(getPaidInvoices.data) ? getPaidInvoices.data : [];
+
+  const totalPaid = typeof getTotalPaid.data === 'number' ? getTotalPaid.data : 0;
 
   const handleEdit = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -55,11 +60,6 @@ export const InvoiceManagement: React.FC = () => {
     setInvoiceToPay(invoice);
     setConfirmPayOpen(true);
   };
-
-  let invoices: Invoice[] = [];
-  if (tab === 'all') invoices = getInvoices.data || [];
-  else if (tab === 'unpaid') invoices = getUnpaidInvoices.data || [];
-  else if (tab === 'paid') invoices = getPaidInvoices.data || [];
 
   // Filtrage par recherche avancée (tous les mots doivent être présents dans au moins un champ)
   const filteredInvoices = invoices.filter(inv => {
