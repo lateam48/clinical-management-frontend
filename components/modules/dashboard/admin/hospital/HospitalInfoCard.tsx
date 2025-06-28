@@ -68,7 +68,7 @@ export function HospitalInfoCard({ hospitalInfo }: HospitalInfoCardProps) {
                 <div className="flex justify-center">
                   <div className="w-24 h-24 border rounded-lg overflow-hidden bg-muted flex items-center justify-center">
                     <img
-                      src={logoUrl || "/placeholder.svg"}
+                      src={logoUrl ?? "/placeholder.svg"}
                       alt={`Logo de ${hospitalInfo.name}`}
                       className="w-full h-full object-cover"
                     />

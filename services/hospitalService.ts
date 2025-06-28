@@ -53,6 +53,6 @@ export const hospitalService = {
   getLogoUrl: (logoPath: string): string => {
     if (!logoPath) return ""
     // Assuming you have a base URL for your MinIO or file storage
-    return `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:9090"}/files/${logoPath}`
+    return `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:9090"}/files/${logoPath}`
   },
 }
