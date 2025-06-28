@@ -76,3 +76,31 @@ export const useUsers = (filters?: { role?: UserRole }) => {
         getUsers
     }
 }
+
+// Staff hooks
+
+export const useStaff = (filters?: { role?: UserRole }) => {
+    const getStaff = useQuery({
+        queryKey: [UsersCacheKeys.Staff, filters],
+        queryFn: () => userServices.getAllStaff(filters?.role)
+    })
+
+    return {
+        getStaff
+    }
+}
+
+export const useStaffMember = ({ staffId }: {
+    staffId?: User['id']
+}) => {
+    const getStaffMember = useQuery({
+        queryKey: [UsersCacheKeys.Staff, staffId],
+        queryFn: () =>
+            userServices.getStaffById(staffId as User['id']),
+        enabled: !!staffId
+    })
+
+    return {
+        getStaffMember
+    }
+}
