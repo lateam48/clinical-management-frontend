@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Users, Receipt, MessageCircle } from "lucide-react"
-import { PatientManagement } from "../patients"
+import { PatientManagement } from "@/components/modules/dashboard/secretary/patients"
 
 export function SecretaryDashboard() {
     return (

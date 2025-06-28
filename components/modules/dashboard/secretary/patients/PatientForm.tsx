@@ -18,15 +18,26 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { SubmitButton } from '@/components/global/submit-button';
+import { cn } from '@/lib/utils';
 
 const patientSchema = z.object({
-  firstName: z.string().min(1, "Le prénom est requis"),
-  lastName: z.string().min(1, "Le nom est requis"),
-  dateOfBirth: z.string().min(1, "La date de naissance est requise"),
-  gender: z.enum(["MALE", "FEMALE"]),
-  address: z.string().min(1, "L'adresse est requise"),
-  phoneNumber: z.string().min(1, "Le téléphone est requis"),
-  email: z.string().email("Email invalide"),
+  firstName: z.string().min(1, "Le prénom est requis").min(2, "Le prénom doit contenir au moins 2 caractères"),
+  lastName: z.string().min(1, "Le nom est requis").min(2, "Le nom doit contenir au moins 2 caractères"),
+  dateOfBirth: z.string().min(1, "La date de naissance est requise").refine((date) => {
+    const today = new Date();
+    const birthDate = new Date(date);
+    const age = today.getFullYear() - birthDate.getFullYear();
+    return age >= 0 && age <= 120;
+  }, "La date de naissance doit être valide"),
+  gender: z.nativeEnum(Gender, { required_error: "Le sexe est requis" }),
+  address: z.string().min(1, "L'adresse est requise").min(5, "L'adresse doit contenir au moins 5 caractères"),
+  phoneNumber: z.string()
+    .min(1, "Le téléphone est requis")
+    .regex(/^(\+33|0)[1-9](\d{8})$/, "Format de téléphone invalide (ex: 0612345678 ou +33123456789)"),
+  email: z.string()
+    .min(1, "L'email est requis")
+    .email("Format d'email invalide")
+    .toLowerCase(),
   medicalHistory: z.string(),
   allergies: z.string(),
 });
@@ -34,18 +45,22 @@ const patientSchema = z.object({
 type PatientFormProps = {
   initialData?: Partial<PatientRequestData>,
   onSubmit: (data: PatientRequestData) => void,
+  onError?: (errors: any) => void,
   loading: boolean
 };
 
-export function PatientForm({ initialData, onSubmit, loading }: PatientFormProps) {
+export function PatientForm({ initialData, onSubmit, onError, loading }: PatientFormProps) {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting, isValid, isDirty },
     reset,
     control,
+    setFocus,
+    clearErrors,
   } = useForm<PatientRequestData>({
     resolver: zodResolver(patientSchema),
+    mode: "onBlur", // Validation en temps réel lors de la perte de focus
     defaultValues: {
       ...initialData,
       medicalHistory: initialData?.medicalHistory ?? "",
@@ -58,37 +73,120 @@ export function PatientForm({ initialData, onSubmit, loading }: PatientFormProps
     reset(initialData || {});
   }, [initialData, reset]);
 
+  // Focus sur le premier champ en erreur
+  React.useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      const firstErrorField = Object.keys(errors)[0] as keyof PatientRequestData;
+      setFocus(firstErrorField);
+    }
+  }, [errors, setFocus]);
+
+  const handleFormSubmit = handleSubmit(
+    (data: PatientRequestData) => {
+      onSubmit(data);
+    },
+    (errors) => {
+      console.error("Erreurs de validation:", errors);
+      onError?.(errors);
+    }
+  );
+
+  const getFieldError = (fieldName: keyof PatientRequestData) => {
+    return errors[fieldName]?.message;
+  };
+
+  const isFieldError = (fieldName: keyof PatientRequestData) => {
+    return !!errors[fieldName];
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleFormSubmit} className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
-          <Label>Prénom</Label>
-          <Input className="bg-white border border-gray-300" {...register("firstName")}/>
-          {errors.firstName && <span className="text-xs text-red-500">{errors.firstName.message}</span>}
+          <Label htmlFor="firstName">Prénom *</Label>
+          <Input 
+            id="firstName" 
+            className={cn(
+              "bg-white border",
+              isFieldError("firstName") 
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
+                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            )}
+            {...register("firstName")}
+            onFocus={() => clearErrors("firstName")}
+          />
+          {getFieldError("firstName") && (
+            <span className="text-xs text-red-500 flex items-center gap-1">
+              <span>⚠</span>
+              {getFieldError("firstName")}
+            </span>
+          )}
         </div>
         <div className="flex flex-col gap-2">
-          <Label>Nom</Label>
-          <Input className="bg-white border border-gray-300" {...register("lastName")}/>
-          {errors.lastName && <span className="text-xs text-red-500">{errors.lastName.message}</span>}
+          <Label htmlFor="lastName">Nom *</Label>
+          <Input 
+            id="lastName" 
+            className={cn(
+              "bg-white border",
+              isFieldError("lastName") 
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
+                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            )}
+            {...register("lastName")}
+            onFocus={() => clearErrors("lastName")}
+          />
+          {getFieldError("lastName") && (
+            <span className="text-xs text-red-500 flex items-center gap-1">
+              <span>⚠</span>
+              {getFieldError("lastName")}
+            </span>
+          )}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
-          <Label>Date de naissance</Label>
-          <Input type="date" className="bg-white border border-gray-300" {...register("dateOfBirth")}/>
-          {errors.dateOfBirth && <span className="text-xs text-red-500">{errors.dateOfBirth.message}</span>}
+          <Label htmlFor="dateOfBirth">Date de naissance *</Label>
+          <Input 
+            id="dateOfBirth" 
+            type="date" 
+            className={cn(
+              "bg-white border",
+              isFieldError("dateOfBirth") 
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
+                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            )}
+            {...register("dateOfBirth")}
+            onFocus={() => clearErrors("dateOfBirth")}
+          />
+          {getFieldError("dateOfBirth") && (
+            <span className="text-xs text-red-500 flex items-center gap-1">
+              <span>⚠</span>
+              {getFieldError("dateOfBirth")}
+            </span>
+          )}
         </div>
         <div className="flex flex-col gap-2">
-          <Label>Sexe</Label>
+          <Label htmlFor="gender">Sexe *</Label>
           <Controller
             name="gender"
             control={control}
             render={({ field }) => (
               <Select
                 value={field.value || ''}
-                onValueChange={field.onChange}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  clearErrors("gender");
+                }}
               >
-                <SelectTrigger className="w-full bg-white border border-gray-300">
+                <SelectTrigger 
+                  id="gender" 
+                  className={cn(
+                    "w-full bg-white border",
+                    isFieldError("gender") 
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
+                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  )}
+                >
                   <SelectValue placeholder="Sélectionner" />
                 </SelectTrigger>
                 <SelectContent>
@@ -98,38 +196,123 @@ export function PatientForm({ initialData, onSubmit, loading }: PatientFormProps
               </Select>
             )}
           />
-          {errors.gender && <span className="text-xs text-red-500">{errors.gender.message}</span>}
+          {getFieldError("gender") && (
+            <span className="text-xs text-red-500 flex items-center gap-1">
+              <span>⚠</span>
+              {getFieldError("gender")}
+            </span>
+          )}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
-          <Label>Adresse</Label>
-          <Input className="bg-white border border-gray-300" {...register("address")}/>
-          {errors.address && <span className="text-xs text-red-500">{errors.address.message}</span>}
+          <Label htmlFor="address">Adresse *</Label>
+          <Input 
+            id="address" 
+            className={cn(
+              "bg-white border",
+              isFieldError("address") 
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
+                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            )}
+            {...register("address")}
+            onFocus={() => clearErrors("address")}
+          />
+          {getFieldError("address") && (
+            <span className="text-xs text-red-500 flex items-center gap-1">
+              <span>⚠</span>
+              {getFieldError("address")}
+            </span>
+          )}
         </div>
         <div className="flex flex-col gap-2">
-          <Label>Téléphone</Label>
-          <Input className="bg-white border border-gray-300" {...register("phoneNumber")}/>
-          {errors.phoneNumber && <span className="text-xs text-red-500">{errors.phoneNumber.message}</span>}
+          <Label htmlFor="phoneNumber">Téléphone *</Label>
+          <Input 
+            id="phoneNumber" 
+            className={cn(
+              "bg-white border",
+              isFieldError("phoneNumber") 
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
+                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            )}
+            placeholder="0612345678"
+            {...register("phoneNumber")}
+            onFocus={() => clearErrors("phoneNumber")}
+          />
+          {getFieldError("phoneNumber") && (
+            <span className="text-xs text-red-500 flex items-center gap-1">
+              <span>⚠</span>
+              {getFieldError("phoneNumber")}
+            </span>
+          )}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-6">
         <div className="flex flex-col gap-2">
-          <Label>Email</Label>
-          <Input type="email" className="bg-white border border-gray-300" {...register("email")}/>
-          {errors.email && <span className="text-xs text-red-500">{errors.email.message}</span>}
+          <Label htmlFor="email">Email *</Label>
+          <Input 
+            id="email" 
+            type="email" 
+            className={cn(
+              "bg-white border",
+              isFieldError("email") 
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
+                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            )}
+            placeholder="exemple@email.com"
+            {...register("email")}
+            onFocus={() => clearErrors("email")}
+          />
+          {getFieldError("email") && (
+            <span className="text-xs text-red-500 flex items-center gap-1">
+              <span>⚠</span>
+              {getFieldError("email")}
+            </span>
+          )}
         </div>
         <div className="flex flex-col gap-2">
-          <Label>Antécédents médicaux</Label>
-          <Textarea className="h-24 bg-white border border-gray-300" {...register("medicalHistory")}/>
+          <Label htmlFor="medicalHistory">Antécédents médicaux</Label>
+          <Textarea 
+            id="medicalHistory" 
+            className="h-24 bg-white border border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
+            placeholder="Antécédents médicaux du patient..."
+            {...register("medicalHistory")}
+          />
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        <Label>Allergies</Label>
-        <Textarea className="h-24 bg-white border border-gray-300" {...register("allergies")}/>
+        <Label htmlFor="allergies">Allergies</Label>
+        <Textarea 
+          id="allergies" 
+          className="h-24 bg-white border border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
+          placeholder="Allergies connues du patient..."
+          {...register("allergies")}
+        />
       </div>
+      
+      {/* Résumé des erreurs */}
+      {Object.keys(errors).length > 0 && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-700 font-medium mb-2">
+            Veuillez corriger les erreurs suivantes :
+          </p>
+          <ul className="text-xs text-red-600 space-y-1">
+            {Object.entries(errors).map(([field, error]) => (
+              <li key={field} className="flex items-center gap-1">
+                <span>•</span>
+                {error?.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <DialogFooter>
-        <SubmitButton loading={loading} label={loading ? 'Enregistrement...' : 'Enregistrer'} />
+        <SubmitButton 
+          loading={loading || isSubmitting} 
+          label={loading || isSubmitting ? 'Enregistrement...' : 'Enregistrer'} 
+          disabled={!isValid || !isDirty}
+        />
       </DialogFooter>
     </form>
   );

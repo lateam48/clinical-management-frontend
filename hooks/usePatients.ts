@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { patientService } from '../services/patientService';
+import { patientService } from '@/services/patientService';
 import { PatientsCacheKeys } from "@/lib/const";
 import { Patient } from "@/types/patient";
 import { PatientRequestData } from '../types/patient';
