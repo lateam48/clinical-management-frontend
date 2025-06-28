@@ -17,6 +17,9 @@ export const useUser = ({ userId }: {
             queryClient.invalidateQueries({
                 queryKey: [UsersCacheKeys.Users]
             })
+            toast.success("Succès", {
+                description: "Utilisateur créé avec succès",
+            })
         },
         onError: (error: ApiError) => {
             toast.error("Erreur", {
@@ -31,6 +34,9 @@ export const useUser = ({ userId }: {
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [UsersCacheKeys.Users]
+            })
+            toast.success("Succès", {
+                description: "Utilisateur mis à jour avec succès",
             })
         },
         onError: (error: ApiError) => {
@@ -49,10 +55,19 @@ export const useUser = ({ userId }: {
 
     const deleteUser = useMutation({
         mutationFn: (userId: User['id']) => userServices.delete(userId),
-        onSuccess: () =>
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [UsersCacheKeys.Users]
             })
+            toast.success("Succès", {
+                description: "Utilisateur supprimé avec succès",
+            })
+        },
+        onError: (error: ApiError) => {
+            toast.error("Erreur", {
+                description: error.response?.data?.message ?? "Impossible de supprimer l'utilisateur",
+            })
+        }
     })
 
     return {
