@@ -127,11 +127,11 @@ export function PrescriptionCard({ prescription, patients = [], doctors = [] }: 
           {/* Medical Content Preview */}
           <div className="space-y-3">
             <div>
-              <p className="text-sm font-medium mb-1">Diagnostic</p>
+              <p className="text-sm font-bold mb-1">Diagnostic</p>
               <p className="text-sm text-muted-foreground line-clamp-2">{prescription.diagnostic}</p>
             </div>
             <div>
-              <p className="text-sm font-medium mb-1">Recommandations</p>
+              <p className="text-sm font-bold mb-1">Recommandations</p>
               <p className="text-sm text-muted-foreground line-clamp-2">{prescription.recommandations}</p>
             </div>
           </div>
