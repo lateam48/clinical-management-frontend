@@ -46,24 +46,24 @@ export function PrescriptionCard({ prescription, patients = [], doctors = [] }: 
     <>
       <Card className="h-full hover:shadow-md transition-shadow">
         <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Prescription #{prescription.id}
+          <div className="flex items-start justify-between gap-2 min-w-0">
+            <div className="space-y-2 min-w-0 flex-1">
+              <CardTitle className="text-lg flex items-center gap-2 min-w-0">
+                <FileText className="h-5 w-5 flex-shrink-0" />
+                <span className="truncate">Prescription #{prescription.id}</span>
               </CardTitle>
-              <div className="flex gap-2">
-                <Badge variant="outline" className="text-xs">
+              <div className="flex flex-wrap gap-1 sm:gap-2">
+                <Badge variant="outline" className="text-xs whitespace-nowrap">
                   {formatDate(prescription.createdAt)}
                 </Badge>
-                <Badge className={getGenderBadgeColor(prescription.patientGender)}>
+                <Badge className={`${getGenderBadgeColor(prescription.patientGender)} text-xs whitespace-nowrap`}>
                   {prescription.patientGender === "MALE" ? "Homme" : "Femme"}
                 </Badge>
               </div>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
+                <Button variant="ghost" className="h-8 w-8 p-0 flex-shrink-0">
                   <span className="sr-only">Ouvrir le menu</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
@@ -138,24 +138,34 @@ export function PrescriptionCard({ prescription, patients = [], doctors = [] }: 
         </CardContent>
 
         <CardFooter className="pt-0">
-          <div className="flex gap-2 w-full">
-            <Button variant="outline" size="sm" onClick={() => setShowDetailsDialog(true)} className="flex-1">
-              <Eye className="mr-2 h-4 w-4" />
-              Détails
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowDetailsDialog(true)} 
+              className="flex-1 min-w-0 text-xs sm:text-sm whitespace-nowrap py-2 sm:py-1.5"
+            >
+              <Eye className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="sm:hidden md:hidden lg:inline">Détails</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowEditDialog(true)} className="flex-1">
-              <Edit className="mr-2 h-4 w-4" />
-              Modifier
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowEditDialog(true)} 
+              className="flex-1 min-w-0 text-xs sm:text-sm whitespace-nowrap py-2 sm:py-1.5"
+            >
+              <Edit className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="sm:hidden md:hidden lg:inline">Modifier</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleGeneratePdf}
               disabled={generatePdf.isPending}
-              className="flex-1 bg-transparent"
+              className="flex-1 min-w-0 text-xs sm:text-sm bg-transparent whitespace-nowrap py-2 sm:py-1.5"
             >
-              <Download className="mr-2 h-4 w-4" />
-              PDF
+              <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="sm:hidden md:hidden lg:inline">PDF</span>
             </Button>
           </div>
         </CardFooter>
