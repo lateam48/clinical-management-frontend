@@ -5,7 +5,7 @@ import { PatientRequestData, PatientResponseData } from '@/types/patient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -55,16 +55,22 @@ export function PatientManagement() {
     }
   };
 
-  // Filtrage côté client
-  const filteredPatients = getPatients.data?.filter((patient: PatientResponseData) => {
-    const q = search.toLowerCase();
-    return (
-      patient.lastName.toLowerCase().includes(q) ||
-      patient.firstName.toLowerCase().includes(q) ||
-      patient.phoneNumber.toLowerCase().includes(q) ||
-      patient.email.toLowerCase().includes(q)
-    );
-  });
+  // Optimisation du filtrage avec useMemo
+  const filteredPatients = useMemo(() => {
+    if (!getPatients.data) return [];
+    
+    const q = search.toLowerCase().trim();
+    if (!q) return getPatients.data;
+    
+    return getPatients.data.filter((patient: PatientResponseData) => {
+      return (
+        patient.lastName.toLowerCase().includes(q) ||
+        patient.firstName.toLowerCase().includes(q) ||
+        patient.phoneNumber.toLowerCase().includes(q) ||
+        patient.email.toLowerCase().includes(q)
+      );
+    });
+  }, [getPatients.data, search]);
 
   return (
     <Card>

@@ -16,7 +16,10 @@ export interface Patient {
   updatedAt: string
 }
 
-export type Gender = "MALE" | "FEMALE"
+export enum Gender {
+  MALE = "MALE",
+  FEMALE = "FEMALE"
+}
 
 export interface PatientRequestData extends Omit<Patient, "id" | "createdAt" | "updatedAt"> {}
 

@@ -1,4 +1,4 @@
-import { apiClient } from '../lib/axios';
+import { apiClient } from '@/lib/axios';
 import { Patient, PatientRequestData, PatientResponseData } from '../types/patient';
 const BASE_URL = '/patients'
 
