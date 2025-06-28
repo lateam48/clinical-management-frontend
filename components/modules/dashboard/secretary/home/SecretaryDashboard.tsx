@@ -1,8 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Users, Receipt, MessageCircle } from "lucide-react"
 import { PatientManagement } from "@/components/modules/dashboard/secretary/patients"
+import { usePatients } from "@/hooks/usePatients"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function SecretaryDashboard() {
+    const { getPatients } = usePatients();
+
     return (
         <div className="space-y-6">
             <div>
@@ -28,7 +32,13 @@ export function SecretaryDashboard() {
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">320</div>
+                        {getPatients.isLoading ? (
+                            <Skeleton className="h-8 w-16" />
+                        ) : getPatients.isError ? (
+                            <div className="text-2xl font-bold text-red-500">Erreur</div>
+                        ) : (
+                            <div className="text-2xl font-bold">{getPatients.data?.length || 0}</div>
+                        )}
                         <p className="text-xs text-muted-foreground">Enregistrés</p>
                     </CardContent>
                 </Card>
