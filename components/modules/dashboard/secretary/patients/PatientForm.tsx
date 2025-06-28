@@ -33,7 +33,7 @@ const patientSchema = z.object({
   address: z.string().min(1, "L'adresse est requise").min(5, "L'adresse doit contenir au moins 5 caractères"),
   phoneNumber: z.string()
     .min(1, "Le téléphone est requis")
-    .regex(/^(\+33|0)[1-9](\d{8})$/, "Format de téléphone invalide (ex: 0612345678 ou +33123456789)"),
+    .regex(/^(6[0-9]{8}|\+2376[0-9]{8})$/, "Format de téléphone camerounais invalide (ex: 6XXXXXXXX ou +2376XXXXXXXX)"),
   email: z.string()
     .min(1, "L'email est requis")
     .email("Format d'email invalide")
@@ -107,13 +107,14 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
           <Input 
             id="firstName" 
             className={cn(
-              "bg-white border",
+              "bg-white border placeholder:text-gray-400",
               isFieldError("firstName") 
                 ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
             )}
             {...register("firstName")}
             onFocus={() => clearErrors("firstName")}
+            placeholder="Prénom du patient"
           />
           {getFieldError("firstName") && (
             <span className="text-xs text-red-500 flex items-center gap-1">
@@ -127,13 +128,14 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
           <Input 
             id="lastName" 
             className={cn(
-              "bg-white border",
+              "bg-white border placeholder:text-gray-400",
               isFieldError("lastName") 
                 ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
             )}
             {...register("lastName")}
             onFocus={() => clearErrors("lastName")}
+            placeholder="Nom du patient"
           />
           {getFieldError("lastName") && (
             <span className="text-xs text-red-500 flex items-center gap-1">
@@ -150,13 +152,14 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
             id="dateOfBirth" 
             type="date" 
             className={cn(
-              "bg-white border",
+              "bg-white border placeholder:text-gray-400",
               isFieldError("dateOfBirth") 
                 ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
             )}
             {...register("dateOfBirth")}
             onFocus={() => clearErrors("dateOfBirth")}
+            placeholder="Date de naissance"
           />
           {getFieldError("dateOfBirth") && (
             <span className="text-xs text-red-500 flex items-center gap-1">
@@ -181,13 +184,13 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
                 <SelectTrigger 
                   id="gender" 
                   className={cn(
-                    "w-full bg-white border",
+                    "w-full bg-white border placeholder:text-gray-400",
                     isFieldError("gender") 
                       ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
                       : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   )}
                 >
-                  <SelectValue placeholder="Sélectionner" />
+                  <SelectValue placeholder="Sélectionner le sexe" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="MALE">Homme</SelectItem>
@@ -210,13 +213,14 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
           <Input 
             id="address" 
             className={cn(
-              "bg-white border",
+              "bg-white border placeholder:text-gray-400",
               isFieldError("address") 
                 ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
             )}
             {...register("address")}
             onFocus={() => clearErrors("address")}
+            placeholder="Adresse du patient"
           />
           {getFieldError("address") && (
             <span className="text-xs text-red-500 flex items-center gap-1">
@@ -230,12 +234,12 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
           <Input 
             id="phoneNumber" 
             className={cn(
-              "bg-white border",
+              "bg-white border placeholder:text-gray-400",
               isFieldError("phoneNumber") 
                 ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
             )}
-            placeholder="0612345678"
+            placeholder="6XXXXXXXX ou +2376XXXXXXXX"
             {...register("phoneNumber")}
             onFocus={() => clearErrors("phoneNumber")}
           />
@@ -254,7 +258,7 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
             id="email" 
             type="email" 
             className={cn(
-              "bg-white border",
+              "bg-white border placeholder:text-gray-400",
               isFieldError("email") 
                 ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
                 : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
@@ -274,7 +278,7 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
           <Label htmlFor="medicalHistory">Antécédents médicaux</Label>
           <Textarea 
             id="medicalHistory" 
-            className="h-24 bg-white border border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
+            className="h-24 bg-white border border-gray-300 focus:border-blue-500 focus:ring-blue-500 placeholder:text-gray-400" 
             placeholder="Antécédents médicaux du patient..."
             {...register("medicalHistory")}
           />
@@ -284,7 +288,7 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
         <Label htmlFor="allergies">Allergies</Label>
         <Textarea 
           id="allergies" 
-          className="h-24 bg-white border border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
+          className="h-24 bg-white border border-gray-300 focus:border-blue-500 focus:ring-blue-500 placeholder:text-gray-400" 
           placeholder="Allergies connues du patient..."
           {...register("allergies")}
         />
@@ -311,7 +315,7 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
         <SubmitButton 
           loading={loading || isSubmitting} 
           label={loading || isSubmitting ? 'Enregistrement...' : 'Enregistrer'} 
-          disabled={!isValid || !isDirty}
+          disabled={!isValid}
         />
       </DialogFooter>
     </form>

@@ -14,17 +14,24 @@ import { Invoice } from '@/types/invoice';
 import { Receipt } from 'lucide-react';
 import { InvoiceDetailModal } from './InvoiceDetailModal';
 
+// Enum pour les types de tabs
+enum InvoiceTabType {
+  ALL = 'all',
+  UNPAID = 'unpaid',
+  PAID = 'paid'
+}
+
 export const AdminInvoiceManagement: React.FC = () => {
   const { getInvoices, getUnpaidInvoices, getPaidInvoices, getTotalPaid } = useInvoices({});
-  const [tab, setTab] = useState<'all' | 'unpaid' | 'paid'>('all');
+  const [tab, setTab] = useState<InvoiceTabType>(InvoiceTabType.ALL);
   const [search, setSearch] = useState('');
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   let invoices:Invoice[] = [];
-  if (tab === 'all') invoices = getInvoices.data || [];
-  else if (tab === 'unpaid') invoices = getUnpaidInvoices.data || [];
-  else if (tab === 'paid') invoices = getPaidInvoices.data || [];
+  if (tab === InvoiceTabType.ALL) invoices = getInvoices.data || [];
+  else if (tab === InvoiceTabType.UNPAID) invoices = getUnpaidInvoices.data || [];
+  else if (tab === InvoiceTabType.PAID) invoices = getPaidInvoices.data || [];
 
   // Filtrage par recherche avancée (tous les mots doivent être présents dans au moins un champ)
   const filteredInvoices = invoices.filter(inv => {
@@ -50,6 +57,10 @@ export const AdminInvoiceManagement: React.FC = () => {
   }, [paidInvoices]);
 
   const totalPaid = getTotalPaid.data ?? 0;
+
+  const handleTabChange = (value: string) => {
+    setTab(value as InvoiceTabType);
+  };
 
   return (
     <Card className="p-6 w-full max-w-6xl mx-auto mt-8">
@@ -88,11 +99,11 @@ export const AdminInvoiceManagement: React.FC = () => {
           className="max-w-xs bg-white border border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
         />
       </div>
-      <Tabs value={tab} onValueChange={v => setTab(v as any)}>
+      <Tabs value={tab} onValueChange={handleTabChange}>
         <TabsList>
-          <TabsTrigger value="all">Toutes</TabsTrigger>
-          <TabsTrigger value="unpaid">Impayées</TabsTrigger>
-          <TabsTrigger value="paid">Payées</TabsTrigger>
+          <TabsTrigger value={InvoiceTabType.ALL}>Toutes</TabsTrigger>
+          <TabsTrigger value={InvoiceTabType.UNPAID}>Impayées</TabsTrigger>
+          <TabsTrigger value={InvoiceTabType.PAID}>Payées</TabsTrigger>
         </TabsList>
         <Separator className="my-4" />
         <TabsContent value={tab}>
