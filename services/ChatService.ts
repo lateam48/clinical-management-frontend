@@ -33,6 +33,30 @@ const mockParticipants: ChatParticipant[] = [
     avatar: "/avatars/doctor2.jpg",
     isOnline: true,
     lastSeen: new Date().toISOString()
+  },
+  {
+    id: 4,
+    name: "Claire Dubois",
+    role: "SECRETARY",
+    avatar: "/avatars/secretary2.jpg",
+    isOnline: true,
+    lastSeen: new Date().toISOString()
+  },
+  {
+    id: 5,
+    name: "Dr. Jean Moreau",
+    role: "DOCTOR",
+    avatar: "/avatars/doctor3.jpg",
+    isOnline: false,
+    lastSeen: new Date(Date.now() - 600000).toISOString() // 10 minutes ago
+  },
+  {
+    id: 6,
+    name: "Sophie Martin",
+    role: "SECRETARY",
+    avatar: "/avatars/secretary3.jpg",
+    isOnline: true,
+    lastSeen: new Date().toISOString()
   }
 ]
 

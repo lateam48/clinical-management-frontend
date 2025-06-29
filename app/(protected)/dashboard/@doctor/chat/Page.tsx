@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { MessageCircle, Send, Trash2, Users, Clock } from "lucide-react"
+import { MessageCircle, Send, Trash2, Users, Clock, Check, CheckCheck, ChevronDown } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function ChatPage() {
   const {
@@ -27,6 +33,16 @@ export default function ChatPage() {
     isDeletingAll
   } = useChat()
 
+  // Mock current user ID (à remplacer par l'ID réel de l'utilisateur connecté)
+  const currentUserId = 1
+
+  // Filtrer les participants : les docteurs voient seulement les secrétaires
+  const availableParticipants = participants.filter(participant => participant.role === 'SECRETARY')
+
+  // Debug: Log participants for troubleshooting
+  console.log('All participants:', participants)
+  console.log('Available participants (SECRETARY):', availableParticipants)
+
   const handleSendTestMessage = () => {
     if (selectedParticipant) {
       sendMessage(`Message de test envoyé à ${selectedParticipant.name} - ${new Date().toLocaleTimeString()}`)
@@ -39,6 +55,8 @@ export default function ChatPage() {
       addReaction(lastMessage.id, "👍")
     }
   }
+
+  const isOwnMessage = (message: any) => message.senderId === currentUserId
 
   if (isLoading) {
     return (
@@ -85,45 +103,98 @@ export default function ChatPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Participants */}
+        {/* Participants - Menu déroulant */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Participants ({participants.length})
+              Secrétaires ({availableParticipants.length})
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {participants.map((participant) => (
-              <div
-                key={participant.id}
-                className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                  selectedParticipant?.id === participant.id
-                    ? 'bg-primary/10 border border-primary/20'
-                    : 'hover:bg-muted/50'
-                }`}
-                onClick={() => selectParticipant(participant)}
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={participant.avatar} />
-                  <AvatarFallback>
-                    {participant.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{participant.name}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{participant.role.toLowerCase()}</p>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <div className={`w-2 h-2 rounded-full ${participant.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                  {!participant.isOnline && participant.lastSeen && isClient && (
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(participant.lastSeen).toLocaleTimeString()}
+          <CardContent>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  <div className="flex items-center gap-2">
+                    {selectedParticipant ? (
+                      <>
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-xs">
+                            {selectedParticipant.name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="truncate">{selectedParticipant.name}</span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">Sélectionner un secrétaire</span>
+                    )}
+                  </div>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-full min-w-[200px]">
+                {availableParticipants.length === 0 ? (
+                  <DropdownMenuItem disabled>
+                    <span className="text-muted-foreground">Aucun secrétaire disponible</span>
+                  </DropdownMenuItem>
+                ) : (
+                  availableParticipants.map((participant) => (
+                    <DropdownMenuItem
+                      key={participant.id}
+                      onClick={() => selectParticipant(participant)}
+                      className="flex items-center gap-3 p-3"
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={participant.avatar} />
+                        <AvatarFallback>
+                          {participant.name.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{participant.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className={`w-2 h-2 rounded-full ${participant.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                          <p className="text-xs text-muted-foreground">
+                            {participant.isOnline ? 'En ligne' : 'Hors ligne'}
+                          </p>
+                        </div>
+                      </div>
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Participant sélectionné - Affichage détaillé */}
+            {selectedParticipant && (
+              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={selectedParticipant.avatar} />
+                    <AvatarFallback>
+                      {selectedParticipant.name.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-medium">{selectedParticipant.name}</p>
+                    <p className="text-sm text-muted-foreground capitalize">
+                      {selectedParticipant.role.toLowerCase()}
                     </p>
-                  )}
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className={`w-2 h-2 rounded-full ${selectedParticipant.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+                      <p className="text-xs text-muted-foreground">
+                        {selectedParticipant.isOnline ? 'En ligne' : 'Hors ligne'}
+                      </p>
+                      {!selectedParticipant.isOnline && selectedParticipant.lastSeen && isClient && (
+                        <span className="text-xs text-muted-foreground">
+                          • Dernière connexion: {new Date(selectedParticipant.lastSeen).toLocaleTimeString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
@@ -164,7 +235,7 @@ export default function ChatPage() {
             {!selectedParticipant ? (
               <div className="text-center py-8 text-muted-foreground">
                 <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Sélectionnez un participant pour voir les messages</p>
+                <p>Sélectionnez un secrétaire pour voir les messages</p>
               </div>
             ) : messages.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -172,79 +243,112 @@ export default function ChatPage() {
                 <p className="text-sm">Utilisez le bouton "Test Message" pour envoyer un message</p>
               </div>
             ) : (
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {messages.map((message) => (
-                  <div key={message.id} className="space-y-2">
-                    <div className="flex items-start gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback>
-                          {message.senderName.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm">{message.senderName}</span>
-                          <span className="text-xs text-muted-foreground capitalize">
-                            {message.senderRole.toLowerCase()}
-                          </span>
-                          {isClient && (
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(message.timestamp).toLocaleTimeString()}
-                            </span>
+              <div className="space-y-4 max-h-96 overflow-y-auto p-4">
+                {messages.map((message) => {
+                  const isOwn = isOwnMessage(message)
+                  return (
+                    <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`flex ${isOwn ? 'flex-row-reverse' : 'flex-row'} items-end gap-2 max-w-[80%]`}>
+                        {/* Avatar - seulement pour les messages reçus */}
+                        {!isOwn && (
+                          <Avatar className="h-6 w-6 flex-shrink-0">
+                            <AvatarFallback className="text-xs">
+                              {message.senderName.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                        
+                        {/* Message Bubble */}
+                        <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
+                          {/* Sender name - seulement pour les messages reçus */}
+                          {!isOwn && (
+                            <p className="text-xs text-muted-foreground mb-1 px-2">
+                              {message.senderName}
+                            </p>
                           )}
-                          {!message.isRead && (
-                            <Badge variant="outline" className="text-xs">
-                              Non lu
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="bg-muted p-3 rounded-lg">
-                          <p className="text-sm">{message.content}</p>
-                          {message.reactions.length > 0 && (
-                            <div className="flex gap-1 mt-2">
-                              {message.reactions.map((reaction) => (
-                                <Badge key={reaction.id} variant="secondary" className="text-xs">
-                                  {reaction.emoji} {reaction.userName}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex gap-2 mt-2">
-                          <Button 
-                            size="sm" 
-                            variant="ghost"
-                            onClick={() => addReaction(message.id, "👍")}
-                          >
-                            👍
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="ghost"
-                            onClick={() => addReaction(message.id, "❤️")}
-                          >
-                            ❤️
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="ghost"
-                            onClick={() => addReaction(message.id, "😊")}
-                          >
-                            😊
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="ghost"
-                            onClick={() => deleteMessage(message.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          
+                          {/* Message content */}
+                          <div className={`rounded-lg px-3 py-2 max-w-full ${
+                            isOwn 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'bg-muted'
+                          }`}>
+                            <p className="text-sm break-words">{message.content}</p>
+                            
+                            {/* Reactions */}
+                            {message.reactions.length > 0 && (
+                              <div className="flex gap-1 mt-2 flex-wrap">
+                                {message.reactions.map((reaction) => (
+                                  <Badge key={reaction.id} variant="secondary" className="text-xs">
+                                    {reaction.emoji} {reaction.userName}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Message info */}
+                          <div className={`flex items-center gap-1 mt-1 px-2 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+                            {isClient && (
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(message.timestamp).toLocaleTimeString()}
+                              </span>
+                            )}
+                            
+                            {/* Message status for own messages */}
+                            {isOwn && (
+                              <div className="flex items-center gap-1">
+                                {message.isRead ? (
+                                  <CheckCheck className="h-3 w-3 text-blue-500" />
+                                ) : (
+                                  <Check className="h-3 w-3 text-muted-foreground" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Action buttons */}
+                          <div className={`flex gap-1 mt-1 ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              className="h-6 w-6 p-0"
+                              onClick={() => addReaction(message.id, "👍")}
+                            >
+                              👍
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              className="h-6 w-6 p-0"
+                              onClick={() => addReaction(message.id, "❤️")}
+                            >
+                              ❤️
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              className="h-6 w-6 p-0"
+                              onClick={() => addReaction(message.id, "😊")}
+                            >
+                              😊
+                            </Button>
+                            {isOwn && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                onClick={() => deleteMessage(message.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <Separator />
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </CardContent>
@@ -263,8 +367,8 @@ export default function ChatPage() {
               <p className="text-muted-foreground">{conversations.length}</p>
             </div>
             <div>
-              <p className="font-medium">Participants:</p>
-              <p className="text-muted-foreground">{participants.length}</p>
+              <p className="font-medium">Secrétaires disponibles:</p>
+              <p className="text-muted-foreground">{availableParticipants.length}</p>
             </div>
             <div>
               <p className="font-medium">Messages:</p>
