@@ -49,6 +49,7 @@ export interface ChatConversation {
 export interface ChatParticipant {
   id: number
   name: string
+  originalName?: string
   role: 'DOCTOR' | 'SECRETARY'
   avatar?: string
   isOnline: boolean

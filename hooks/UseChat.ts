@@ -115,7 +115,13 @@ export const useChat = () => {
       if (!currentConversation?.id) {
         throw new Error('Aucune conversation sélectionnée')
       }
-      return await chatService.sendMessage(currentConversation.id, content)
+      
+      // For virtual conversations, use the participant's original name
+      const recipientName = currentConversation.id.startsWith('virtual-') 
+        ? currentConversation.participants[0]?.originalName || currentConversation.participants[0]?.name || 'Unknown'
+        : currentConversation.id
+        
+      return await chatService.sendMessage(recipientName, content)
     },
     onSuccess: (newMessage) => {
       addMessage(newMessage)
@@ -221,8 +227,17 @@ export const useChat = () => {
         markAsReadMutation.mutate(existingConversation.id)
       }
     } else {
-      // Create new conversation - this would need to be implemented
-      toast.info('Nouvelle conversation créée')
+      // Create a virtual conversation for new participants
+      const virtualConversation = {
+        id: `virtual-${participant.id}`,
+        participants: [participant],
+        lastMessage: undefined,
+        unreadCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      setCurrentConversation(virtualConversation)
+      toast.info(`Nouvelle conversation avec ${participant.name}`)
     }
   }, [setSelectedParticipant, conversations, setCurrentConversation, markAsReadMutation])
 

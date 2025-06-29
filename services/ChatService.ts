@@ -27,6 +27,7 @@ class ChatService {
       return data.map((participant: any) => ({
         id: participant.id || Math.random(), // Generate ID if not provided
         name: this.getDisplayName(participant.fullName || participant.username),
+        originalName: participant.fullName || participant.username, // Keep original name for API calls
         role: participant.fullName?.toLowerCase().includes('secretary') ? 'SECRETARY' : 'DOCTOR',
         avatar: participant.avatar,
         isOnline: true, // Default to true for now
