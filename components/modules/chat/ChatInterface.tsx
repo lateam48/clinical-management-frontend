@@ -68,9 +68,9 @@ export function ChatInterface({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-shrink-0">
         <div>
           <h1 className="text-2xl font-bold">{title}</h1>
           <p className="text-muted-foreground">Chat privé avec les {participantRole === 'SECRETARY' ? 'secrétaires' : 'docteurs'}</p>
@@ -97,7 +97,7 @@ export function ChatInterface({
       </div>
 
       {/* Chat layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full flex-1 min-h-0">
         {/* Participants */}
         <ParticipantList
           participants={availableParticipants}
@@ -110,7 +110,7 @@ export function ChatInterface({
         />
 
         {/* Chat area */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 h-full">
           <ChatArea
             messages={messages}
             selectedParticipant={selectedParticipant}

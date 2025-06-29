@@ -54,7 +54,7 @@ export function ChatArea({
   const count = typeof unreadCount === 'object' ? unreadCount.total : (unreadCount || 0)
 
   return (
-    <Card className="flex flex-col h-[600px]">
+    <Card className="flex flex-col h-full">
       <CardHeader className="flex-shrink-0">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -90,7 +90,7 @@ export function ChatArea({
       
       <CardContent className="flex-1 flex flex-col p-0">
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-6 space-y-3">
           {!selectedParticipant ? (
             <div className="text-center py-8 text-muted-foreground">
               <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />

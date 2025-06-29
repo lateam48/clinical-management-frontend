@@ -82,7 +82,7 @@ export function MessageBubble({
         </Avatar>
       )}
       
-      <div className={`flex flex-col max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+      <div className={`flex flex-col max-w-[85%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
         <div className={`relative group ${isOwnMessage ? 'order-2' : 'order-1'}`}>
           <div
             className={`px-4 py-2 rounded-lg ${
@@ -91,7 +91,7 @@ export function MessageBubble({
                 : 'bg-gray-200 text-gray-900'
             }`}
           >
-            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+            <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
           </div>
           
           {/* Actions menu */}
