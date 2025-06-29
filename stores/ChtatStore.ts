@@ -47,10 +47,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
   
   setMessages: (messages) => set({ messages }),
   
-  addMessage: (message) => set((state) => ({
-    messages: [...state.messages, message],
-    unreadCount: state.unreadCount + 1
-  })),
+  addMessage: (message) => set((state) => {
+    // Don't increment unread count for messages sent by the current user
+    // We can determine this by checking if the message is not read and the sender is not the current user
+    const shouldIncrementUnread = !message.isRead && message.senderId !== 2 // TODO: Get current user ID dynamically
+    
+    return {
+      messages: [...state.messages, message],
+      unreadCount: shouldIncrementUnread ? state.unreadCount + 1 : state.unreadCount
+    }
+  }),
   
   setParticipants: (participants) => set({ participants }),
   

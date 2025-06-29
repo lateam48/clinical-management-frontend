@@ -134,7 +134,7 @@ export const useChat = () => {
     onSuccess: (newMessage) => {
       addMessage(newMessage)
       queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations })
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount })
+      // Don't invalidate unread count since we don't want to increment it for own messages
       toast.success('Message envoyé')
     },
     onError: (error) => {

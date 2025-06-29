@@ -117,6 +117,11 @@ class ChatService {
       const response = await apiClient.get(`${this.baseUrl}/chat/unread/count`)
       // API returns number directly
       const count = response.data || 0
+      
+      // Get current user ID from session or context
+      // For now, we'll need to get this from the calling component
+      // This is a temporary fix - ideally the API should handle this filtering
+      
       return { 
         total: count, 
         byConversation: {} // We'll need to implement this if needed
