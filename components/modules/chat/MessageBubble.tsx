@@ -83,16 +83,12 @@ export function MessageBubble({
       )}
       
       <div className={`flex flex-col max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
-        {!isOwnMessage && (
-          <p className="text-xs text-muted-foreground mb-1 font-medium">{senderName}</p>
-        )}
-        
         <div className={`relative group ${isOwnMessage ? 'order-2' : 'order-1'}`}>
           <div
             className={`px-4 py-2 rounded-lg ${
               isOwnMessage
-                ? 'bg-gray-200 text-gray-900'
-                : 'bg-blue-500 text-white'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 text-gray-900'
             }`}
           >
             <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
