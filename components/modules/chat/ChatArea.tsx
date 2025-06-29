@@ -1,27 +1,23 @@
 'use client'
 
-import { useRef, useEffect } from 'react';
-import { MessageCircle, CheckCheck } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { MessageBubble } from './MessageBubble';
-import { MessageInput } from './MessageInput';
-import { EmptyState } from '@/components/global/empty-state';
-import { ChatMessage, ChatParticipant } from '@/types/chat';
+import { useRef, useEffect } from 'react'
+import { MessageCircle } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { MessageBubble } from './MessageBubble'
+import { MessageInput } from './MessageInput'
+import { ChatMessage, ChatParticipant } from '@/types/chat'
 
 interface ChatAreaProps {
-  messages: ChatMessage[];
-  selectedParticipant: ChatParticipant | null;
-  onSendMessage: (content: string) => void;
-  onAddReaction: (messageId: number, emoji: string) => void;
-  onDeleteMessage?: (messageId: number) => void;
-  onMarkAsRead?: (senderId: number) => void;
-  isSending?: boolean;
-  isMarkingAsRead?: boolean;
-  currentUserId?: number;
-  unreadCount?: number | { total: number; byConversation: Record<string, number> };
-  reverseDisplay?: boolean;
+  messages: ChatMessage[]
+  selectedParticipant: ChatParticipant | null
+  onSendMessage: (content: string) => void
+  onAddReaction: (messageId: string, emoji: string) => void
+  onDeleteMessage?: (messageId: string) => void
+  isSending?: boolean
+  currentUserId?: number
+  unreadCount?: number
 }
 
 export function ChatArea({
@@ -30,39 +26,21 @@ export function ChatArea({
   onSendMessage,
   onAddReaction,
   onDeleteMessage,
-  onMarkAsRead,
   isSending = false,
-  isMarkingAsRead = false,
   currentUserId,
-  unreadCount = 0,
-  reverseDisplay = false,
+  unreadCount = 0
 }: ChatAreaProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Auto-scroll to bottom when new messages arrive, but only if user is already at bottom
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (container && messages.length > 0) {
-      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
-      const isUserScrolling = container.scrollTop < container.scrollHeight - container.clientHeight - 50;
-      
-      // Only auto-scroll if user is at the bottom or very close to it
-      if (isAtBottom && !isUserScrolling) {
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      }
-    }
-  }, [messages.length]); // Only trigger on message count change, not content change
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
-  const isOwnMessage = (message: ChatMessage) => message.senderId === currentUserId;
-
-  // Extract the count value from unreadCount
-  const count = typeof unreadCount === 'object' ? unreadCount.total : unreadCount || 0;
+  const isOwnMessage = (message: ChatMessage) => message.senderId === currentUserId
 
   return (
-    <Card className="flex flex-col h-full">
+    <Card className="flex flex-col h-[600px]">
       <CardHeader className="flex-shrink-0">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -74,58 +52,39 @@ export function ChatArea({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            {count > 0 && (
-              <Badge variant="secondary">
-                {count} non lu{count > 1 ? 's' : ''}
-              </Badge>
-            )}
-            {selectedParticipant && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onMarkAsRead?.(selectedParticipant.id)}
-                disabled={isMarkingAsRead || count === 0 || !onMarkAsRead}
-                className="h-8 px-3"
-              >
-                <CheckCheck className="h-4 w-4 mr-1" />
-                {isMarkingAsRead ? 'Marquage...' : 'Marquer comme lu'}
-              </Button>
-            )}
-          </div>
+          {unreadCount > 0 && (
+            <Badge variant="secondary">
+              {unreadCount} non lu{unreadCount > 1 ? 's' : ''}
+            </Badge>
+          )}
         </CardTitle>
       </CardHeader>
-
+      
       <CardContent className="flex-1 flex flex-col p-0">
         {/* Messages area */}
-        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-3">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {!selectedParticipant ? (
-            <EmptyState
-              icon={MessageCircle}
-              title="Aucun participant sélectionné"
-              description="Sélectionnez un participant pour voir les messages"
-            />
+            <div className="text-center py-8 text-muted-foreground">
+              <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Sélectionnez un participant pour voir les messages</p>
+            </div>
           ) : messages.length === 0 ? (
-            <EmptyState
-              icon={MessageCircle}
-              title="Aucun message"
-              description="Aucun message dans cette conversation. Commencez à discuter !"
-            />
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Aucun message dans cette conversation</p>
+              <p className="text-sm">Commencez à discuter !</p>
+            </div>
           ) : (
             <>
-              {messages
-                .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-                .map((message) => (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    isOwnMessage={isOwnMessage(message)}
-                    onAddReaction={onAddReaction}
-                    onDeleteMessage={onDeleteMessage}
-                    currentUserId={currentUserId}
-                    reverseDisplay={reverseDisplay}
-                  />
-                ))}
+              {messages.map((message) => (
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  isOwnMessage={isOwnMessage(message)}
+                  onAddReaction={onAddReaction}
+                  onDeleteMessage={onDeleteMessage}
+                  currentUserId={currentUserId}
+                />
+              ))}
               <div ref={messagesEndRef} />
             </>
           )}
@@ -142,5 +101,5 @@ export function ChatArea({
         )}
       </CardContent>
     </Card>
-  );
-}
+  )
+} 

@@ -98,7 +98,7 @@ export const navigationConfig: NavigationItem[] = [
   },
   {
     title: "Messagerie",
-    href: "/dashboard/chat",
+    href: "/dashboard?view=chat",
     icon: MessageCircle,
     roles: [UserRoles.DOCTOR],
   },
@@ -129,7 +129,7 @@ export const navigationConfig: NavigationItem[] = [
   },
   {
     title: "Messagerie",
-    href: "/dashboard/chat",
+    href: "/dashboard?view=chat",
     icon: MessageCircle,
     roles: [UserRoles.SECRETARY],
   },

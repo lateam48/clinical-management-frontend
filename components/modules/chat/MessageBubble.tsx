@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useSession } from 'next-auth/react'
 import { Check, CheckCheck, MoreHorizontal, Smile } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -17,10 +16,9 @@ import { ChatMessage } from '@/types/chat'
 interface MessageBubbleProps {
   message: ChatMessage
   isOwnMessage: boolean
-  onAddReaction: (messageId: number, emoji: string) => void
-  onDeleteMessage?: (messageId: number) => void
+  onAddReaction?: (messageId: string, emoji: string) => void
+  onDeleteMessage?: (messageId: string) => void
   currentUserId?: number
-  reverseDisplay?: boolean
 }
 
 export function MessageBubble({
@@ -28,10 +26,8 @@ export function MessageBubble({
   isOwnMessage,
   onAddReaction,
   onDeleteMessage,
-  currentUserId,
-  reverseDisplay = false
+  currentUserId
 }: MessageBubbleProps) {
-  const { data: session } = useSession()
   const [isClient, setIsClient] = useState(false)
 
   // Handle hydration
@@ -41,69 +37,56 @@ export function MessageBubble({
 
   const formatTime = (timestamp: string) => {
     if (!isClient) return ''
-    try {
-      const date = new Date(timestamp)
-      return date.toLocaleString('fr-FR', { 
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit', 
-        minute: '2-digit'
-      })
-    } catch (error) {
-      console.error('Error formatting date:', timestamp, error)
-      return 'Invalid Date'
-    }
+    return new Date(timestamp).toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    })
   }
 
   const handleReaction = (emoji: string) => {
-    onAddReaction(message.id, emoji)
+    onAddReaction?.(message.id, emoji)
   }
 
   const handleDelete = () => {
     onDeleteMessage?.(message.id)
   }
 
-  // Use the real sender name from the message
-  const senderName = message.senderName || ''
-
-  // Own messages go to the left with gray background
-  // Received messages go to the right with blue background
-  const shouldShowOnRight = !isOwnMessage
-  const shouldShowBlueBackground = !isOwnMessage
-
   return (
-    <div className={`flex gap-3 ${shouldShowOnRight ? 'justify-end' : 'justify-start'}`}>
-      {!shouldShowOnRight && (
+    <div className={`flex gap-3 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+      {!isOwnMessage && (
         <Avatar className="h-8 w-8 mt-1">
           <AvatarImage src="/avatars/default.jpg" />
           <AvatarFallback className="text-xs">
-            {senderName.split(' ').map(n => n[0]).join('')}
+            {message.senderName.split(' ').map(n => n[0]).join('')}
           </AvatarFallback>
         </Avatar>
       )}
       
-      <div className={`flex flex-col max-w-[85%] ${shouldShowOnRight ? 'items-end' : 'items-start'}`}>
-        <div className={`relative group ${shouldShowOnRight ? 'order-2' : 'order-1'}`}>
+      <div className={`flex flex-col max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+        {!isOwnMessage && (
+          <p className="text-xs text-muted-foreground mb-1">{message.senderName}</p>
+        )}
+        
+        <div className={`relative group ${isOwnMessage ? 'order-2' : 'order-1'}`}>
           <div
             className={`px-4 py-2 rounded-lg ${
-              shouldShowBlueBackground
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 text-gray-900'
+              isOwnMessage
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted'
             }`}
           >
-            <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{message.content}</p>
+            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
           </div>
           
           {/* Actions menu */}
-          <div className={`absolute top-1 ${shouldShowOnRight ? '-left-12' : '-right-12'} opacity-0 group-hover:opacity-100 transition-opacity`}>
+          <div className={`absolute top-1 ${isOwnMessage ? '-left-12' : '-right-12'} opacity-0 group-hover:opacity-100 transition-opacity`}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                   <MoreHorizontal className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align={shouldShowOnRight ? 'end' : 'start'}>
+              <DropdownMenuContent align={isOwnMessage ? 'end' : 'start'}>
                 <DropdownMenuItem onClick={() => handleReaction('👍')}>
                   👍 Réagir
                 </DropdownMenuItem>
@@ -124,9 +107,9 @@ export function MessageBubble({
         </div>
         
         {/* Message metadata */}
-        <div className={`flex items-center gap-2 mt-1 ${shouldShowOnRight ? 'order-1' : 'order-2'}`}>
+        <div className={`flex items-center gap-2 mt-1 ${isOwnMessage ? 'order-1' : 'order-2'}`}>
           <span className="text-xs text-muted-foreground">
-            {formatTime(message.createdAt)}
+            {formatTime(message.timestamp)}
           </span>
           
           {isOwnMessage && (
@@ -141,8 +124,8 @@ export function MessageBubble({
         </div>
         
         {/* Reactions */}
-        {message.reactions && Array.isArray(message.reactions) && message.reactions.length > 0 && (
-          <div className={`flex flex-wrap gap-1 mt-1 ${shouldShowOnRight ? 'justify-end' : 'justify-start'}`}>
+        {message.reactions && message.reactions.length > 0 && (
+          <div className={`flex flex-wrap gap-1 mt-1 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
             {message.reactions.map((reaction) => (
               <Badge
                 key={reaction.id}

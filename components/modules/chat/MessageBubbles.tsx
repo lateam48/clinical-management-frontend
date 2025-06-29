@@ -6,8 +6,8 @@ import { ChatMessage } from '@/types/chat'
 interface MessageBubblesProps {
   messages: ChatMessage[]
   currentUserId?: number
-  onAddReaction: (messageId: number, emoji: string) => void
-  onDeleteMessage?: (messageId: number) => void
+  onAddReaction?: (messageId: string, emoji: string) => void
+  onDeleteMessage?: (messageId: string) => void
 }
 
 export function MessageBubbles({ 
