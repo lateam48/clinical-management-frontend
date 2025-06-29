@@ -4,18 +4,6 @@ import { ChatParticipant, ChatConversation, ChatMessage, UnreadCount } from '@/t
 class ChatService {
   private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api/v1'
 
-  // Utility function to map database names to display names
-  private getDisplayName(dbName: string): string {
-    switch (dbName?.toLowerCase()) {
-      case 'doctor':
-        return 'Dr. Martin Dupont'
-      case 'secretary':
-        return '' // Empty string for secretary
-      default:
-        return dbName || 'Unknown'
-    }
-  }
-
   // Get all participants (users that can chat)
   async getParticipants(): Promise<ChatParticipant[]> {
     try {
@@ -26,7 +14,7 @@ class ChatService {
       // Transform to match our ChatParticipant interface
       return data.map((participant: any) => ({
         id: participant.id || Math.random(), // Generate ID if not provided
-        name: this.getDisplayName(participant.fullName || participant.username),
+        name: participant.fullName || participant.username || '',
         originalName: participant.fullName || participant.username, // Keep original name for API calls
         role: participant.fullName?.toLowerCase().includes('secretary') ? 'SECRETARY' : 'DOCTOR',
         avatar: participant.avatar,
@@ -58,15 +46,15 @@ class ChatService {
             participants: [
               {
                 id: message.senderId,
-                name: this.getDisplayName(message.senderName),
-                role: message.senderName.toLowerCase().includes('secretary') ? 'SECRETARY' : 'DOCTOR',
+                name: message.senderName || '',
+                role: message.senderName?.toLowerCase().includes('secretary') ? 'SECRETARY' : 'DOCTOR',
                 isOnline: true,
                 lastSeen: new Date().toISOString()
               },
               {
                 id: message.recipientId,
-                name: this.getDisplayName(message.recipientName),
-                role: message.recipientName.toLowerCase().includes('secretary') ? 'SECRETARY' : 'DOCTOR',
+                name: message.recipientName || '',
+                role: message.recipientName?.toLowerCase().includes('secretary') ? 'SECRETARY' : 'DOCTOR',
                 isOnline: true,
                 lastSeen: new Date().toISOString()
               }

@@ -17,8 +17,10 @@ interface ChatInterfaceProps {
   onAddReaction: (messageId: number, emoji: string) => void
   onDeleteMessage?: (messageId: number) => void
   onDeleteAllMessages?: () => void
+  onMarkAsRead?: (senderId: number) => void
   isSending?: boolean
   isDeletingAll?: boolean
+  isMarkingAsRead?: boolean
   currentUserId?: number
   unreadCount?: number | { total: number; byConversation: Record<string, number> }
   title: string
@@ -34,8 +36,10 @@ export function ChatInterface({
   onAddReaction,
   onDeleteMessage,
   onDeleteAllMessages,
+  onMarkAsRead,
   isSending = false,
   isDeletingAll = false,
+  isMarkingAsRead = false,
   currentUserId,
   unreadCount = 0,
   title,
@@ -113,7 +117,9 @@ export function ChatInterface({
             onSendMessage={onSendMessage}
             onAddReaction={onAddReaction}
             onDeleteMessage={onDeleteMessage}
+            onMarkAsRead={onMarkAsRead}
             isSending={isSending}
+            isMarkingAsRead={isMarkingAsRead}
             currentUserId={currentUserId}
             unreadCount={unreadCount}
           />

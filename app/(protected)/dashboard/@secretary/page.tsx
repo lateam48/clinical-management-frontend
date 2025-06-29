@@ -43,11 +43,11 @@ export default function SecretaryDashboardPage() {
         }
     }
 
-    const handleAddReaction = (messageId: string, emoji: string) => {
+    const handleAddReaction = (messageId: number, emoji: string) => {
         addReaction(messageId, emoji)
     }
 
-    const handleDeleteMessage = (messageId: string) => {
+    const handleDeleteMessage = (messageId: number) => {
         deleteMessage(messageId)
     }
 

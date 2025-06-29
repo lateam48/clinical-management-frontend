@@ -32,6 +32,12 @@ export function MessageBubble({
   const { data: session } = useSession()
   const [isClient, setIsClient] = useState(false)
 
+  // Debug logs
+  console.log('MessageBubble - message.senderId:', message.senderId)
+  console.log('MessageBubble - currentUserId:', currentUserId)
+  console.log('MessageBubble - isOwnMessage:', isOwnMessage)
+  console.log('MessageBubble - message.senderName:', message.senderName)
+
   // Handle hydration
   if (typeof window !== 'undefined' && !isClient) {
     setIsClient(true)
@@ -62,25 +68,8 @@ export function MessageBubble({
     onDeleteMessage?.(message.id)
   }
 
-  // Get the correct sender name based on session and message data
-  const getDisplayName = (senderName: string, senderId: number) => {
-    // If it's the current user's message, use session name
-    if (isOwnMessage && session?.user?.name) {
-      return session.user.name
-    }
-    
-    // For other users, map the database names to display names
-    switch (senderName?.toLowerCase()) {
-      case 'doctor':
-        return 'Dr. Martin Dupont'
-      case 'secretary':
-        return '' // Empty string for secretary
-      default:
-        return senderName || 'Unknown'
-    }
-  }
-  
-  const senderName = getDisplayName(message.senderName, message.senderId)
+  // Use the real sender name from the message
+  const senderName = message.senderName || ''
 
   return (
     <div className={`flex gap-3 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
@@ -102,8 +91,8 @@ export function MessageBubble({
           <div
             className={`px-4 py-2 rounded-lg ${
               isOwnMessage
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted'
+                ? 'bg-gray-200 text-gray-900'
+                : 'bg-blue-500 text-white'
             }`}
           >
             <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>

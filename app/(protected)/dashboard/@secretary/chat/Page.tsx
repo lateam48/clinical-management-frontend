@@ -25,11 +25,13 @@ export default function SecretaryChatPage() {
     error,
     isSending,
     isDeletingAll,
+    isMarkingAsRead,
     sendMessage,
     addReaction,
     deleteMessage,
     deleteAllMessages,
-    markAsRead
+    markAsRead,
+    markAsReadBySender
   } = useChat()
 
   const handleSelectParticipant = (participant: ChatParticipant) => {
@@ -56,8 +58,19 @@ export default function SecretaryChatPage() {
     deleteAllMessages()
   }
 
+  const handleMarkAsRead = (senderId: number) => {
+    markAsReadBySender(senderId)
+  }
+
   // Get current user ID from session
-  const currentUserId = session?.user?.id ? parseInt(session.user.id as string) : 3 // Default to 3 for secretary
+  const currentUserId = session?.user?.id ? parseInt(session.user.id as string) : null
+
+  // Debug: Log session and currentUserId
+  console.log('Secretary Chat - Session:', session)
+  console.log('Secretary Chat - Current User ID:', currentUserId)
+  console.log('Secretary Chat - Session User ID:', session?.user?.id)
+  console.log('Secretary Chat - Session User:', session?.user)
+  console.log('Secretary Chat - Messages:', messages)
 
   if (isLoading) {
     return (
@@ -80,22 +93,51 @@ export default function SecretaryChatPage() {
     )
   }
 
+  if (!currentUserId) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center text-yellow-500">
+          <p>Erreur: ID utilisateur non disponible</p>
+          <p className="text-sm">Veuillez vous reconnecter</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <ChatInterface
-      participants={participants}
-      messages={messages}
-      selectedParticipant={selectedParticipant}
-      onSelectParticipant={handleSelectParticipant}
-      onSendMessage={handleSendMessage}
-      onAddReaction={handleAddReaction}
-      onDeleteMessage={handleDeleteMessage}
-      onDeleteAllMessages={handleDeleteAllMessages}
-      isSending={isSending}
-      isDeletingAll={isDeletingAll}
-      currentUserId={currentUserId}
-      unreadCount={unreadCount}
-      title="Chat - Secrétaire"
-      participantRole="DOCTOR"
-    />
+    <div className="space-y-6">
+      {/* Debug Section */}
+      <div className="p-4 bg-gray-100 rounded-lg">
+        <h3 className="font-bold mb-2">Debug Info:</h3>
+        <div className="text-sm space-y-1">
+          <div><strong>Current User ID:</strong> {currentUserId}</div>
+          <div><strong>Messages Count:</strong> {messages.length}</div>
+          <div><strong>Selected Participant:</strong> {selectedParticipant?.name || 'None'}</div>
+          <div><strong>Raw Messages:</strong></div>
+          <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-32">
+            {JSON.stringify(messages.map(m => ({ id: m.id, senderId: m.senderId, content: m.content.substring(0, 30) })), null, 2)}
+          </pre>
+        </div>
+      </div>
+
+      <ChatInterface
+        participants={participants}
+        messages={messages}
+        selectedParticipant={selectedParticipant}
+        onSelectParticipant={handleSelectParticipant}
+        onSendMessage={handleSendMessage}
+        onAddReaction={handleAddReaction}
+        onDeleteMessage={handleDeleteMessage}
+        onDeleteAllMessages={handleDeleteAllMessages}
+        onMarkAsRead={handleMarkAsRead}
+        isSending={isSending}
+        isDeletingAll={isDeletingAll}
+        isMarkingAsRead={isMarkingAsRead}
+        currentUserId={currentUserId}
+        unreadCount={unreadCount}
+        title="Chat - Secrétaire"
+        participantRole="DOCTOR"
+      />
+    </div>
   )
 } 

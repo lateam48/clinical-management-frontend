@@ -43,11 +43,11 @@ export default function DoctorDashboardPage() {
         }
     }
 
-    const handleAddReaction = (messageId: string, emoji: string) => {
+    const handleAddReaction = (messageId: number, emoji: string) => {
         addReaction(messageId, emoji)
     }
 
-    const handleDeleteMessage = (messageId: string) => {
+    const handleDeleteMessage = (messageId: number) => {
         deleteMessage(messageId)
     }
 
@@ -56,7 +56,7 @@ export default function DoctorDashboardPage() {
     }
 
     // Mock current user ID (in real app, this would come from auth)
-    const currentUserId = 1
+    const currentUserId = 2
     
     // Show chat if view=chat parameter is present
     if (view === 'chat') {

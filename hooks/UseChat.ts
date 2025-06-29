@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { chatService } from '@/services/ChatService'
+import { chatService } from '@/services/chatService'
 import { useChatStore } from '@/stores/ChtatStore'
 import { toast } from 'sonner'
 
@@ -54,11 +54,13 @@ export const useChat = () => {
       setConversations(data)
       return data
     },
-    onError: (error) => {
-      setError(error.message)
-      toast.error('Erreur', {
-        description: 'Impossible de charger les conversations'
-      })
+    onSettled: (data, error) => {
+      if (error) {
+        setError(error.message)
+        toast.error('Erreur', {
+          description: 'Impossible de charger les conversations'
+        })
+      }
     }
   })
 
@@ -70,11 +72,13 @@ export const useChat = () => {
       setParticipants(data)
       return data
     },
-    onError: (error) => {
-      setError(error.message)
-      toast.error('Erreur', {
-        description: 'Impossible de charger les participants'
-      })
+    onSettled: (data, error) => {
+      if (error) {
+        setError(error.message)
+        toast.error('Erreur', {
+          description: 'Impossible de charger les participants'
+        })
+      }
     }
   })
 
@@ -87,11 +91,13 @@ export const useChat = () => {
       return data
     },
     enabled: isClient,
-    onError: (error) => {
-      setError(error.message)
-      toast.error('Erreur', {
-        description: 'Impossible de charger les messages'
-      })
+    onSettled: (data, error) => {
+      if (error) {
+        setError(error.message)
+        toast.error('Erreur', {
+          description: 'Impossible de charger les messages'
+        })
+      }
     }
   })
 
@@ -100,12 +106,14 @@ export const useChat = () => {
     queryKey: CHAT_KEYS.unreadCount,
     queryFn: async () => {
       const data = await chatService.getUnreadCount()
-      setUnreadCount(data)
+      setUnreadCount(data.total)
       return data
     },
     enabled: isClient,
-    onError: (error) => {
-      setError(error.message)
+    onSettled: (data, error) => {
+      if (error) {
+        setError(error.message)
+      }
     }
   })
 
@@ -118,7 +126,7 @@ export const useChat = () => {
       
       // For virtual conversations, use the participant's original name
       const recipientName = currentConversation.id.startsWith('virtual-') 
-        ? currentConversation.participants[0]?.originalName || currentConversation.participants[0]?.name || 'Unknown'
+        ? currentConversation.participants[0]?.originalName || currentConversation.participants[0]?.name || ''
         : currentConversation.id
         
       return await chatService.sendMessage(recipientName, content)
@@ -146,8 +154,8 @@ export const useChat = () => {
       const newReaction = {
         id: Date.now().toString(),
         emoji,
-        userId: 1, // Mock current user ID - will be replaced with real user data
-        userName: 'Dr. Martin Dupont', // Mock current user name - will be replaced with real user data
+        userId: 1, // TODO: Get from session
+        userName: 'User', // TODO: Get from session
         timestamp: new Date().toISOString()
       }
       addReactionToMessage(messageId, newReaction)
@@ -213,6 +221,24 @@ export const useChat = () => {
     }
   })
 
+  // Mark as read by sender mutation
+  const markAsReadBySenderMutation = useMutation({
+    mutationFn: async (senderId: number) => {
+      await chatService.markAsRead(senderId.toString())
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount })
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) })
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations })
+      toast.success('Messages marqués comme lus')
+    },
+    onError: (error) => {
+      toast.error('Erreur', {
+        description: 'Impossible de marquer les messages comme lus'
+      })
+    }
+  })
+
   // Actions
   const selectParticipant = useCallback((participant: any) => {
     setSelectedParticipant(participant)
@@ -268,6 +294,10 @@ export const useChat = () => {
     markMessageAsRead(messageId)
   }, [markMessageAsRead])
 
+  const markAsReadBySender = useCallback((senderId: number) => {
+    markAsReadBySenderMutation.mutate(senderId)
+  }, [markAsReadBySenderMutation])
+
   // Auto-refresh unread count
   useEffect(() => {
     if (!isClient) return
@@ -300,10 +330,12 @@ export const useChat = () => {
     markAsRead,
     markMessageAsRead,
     updateParticipantStatus,
+    markAsReadBySender,
 
     // Mutations state
     isSending: sendMessageMutation.isPending,
     isAddingReaction: addReactionMutation.isPending,
-    isDeletingAll: deleteAllMessagesMutation.isPending
+    isDeletingAll: deleteAllMessagesMutation.isPending,
+    isMarkingAsRead: markAsReadBySenderMutation.isPending
   }
 }
