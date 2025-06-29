@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { ChatInterface } from '@/components/modules/chat'
 import { useChat } from '@/hooks/UseChat'
 import { ChatParticipant } from '@/types/chat'
 import { UserRoles } from '@/types'
 
 export default function DoctorChatPage() {
+  const { data: session } = useSession()
   const [selectedParticipant, setSelectedParticipant] = useState<ChatParticipant | null>(null)
   const [isClient, setIsClient] = useState(false)
 
@@ -42,11 +44,11 @@ export default function DoctorChatPage() {
     }
   }
 
-  const handleAddReaction = (messageId: string, emoji: string) => {
+  const handleAddReaction = (messageId: number, emoji: string) => {
     addReaction(messageId, emoji)
   }
 
-  const handleDeleteMessage = (messageId: string) => {
+  const handleDeleteMessage = (messageId: number) => {
     deleteMessage(messageId)
   }
 
@@ -54,8 +56,8 @@ export default function DoctorChatPage() {
     deleteAllMessages()
   }
 
-  // Mock current user ID (in real app, this would come from auth)
-  const currentUserId = 1
+  // Get current user ID from session
+  const currentUserId = session?.user?.id ? parseInt(session.user.id as string) : 2 // Default to 2 for doctor
 
   if (isLoading) {
     return (

@@ -1,266 +1,192 @@
-import { apiClient } from "@/lib/axios"
-import { 
-  ChatMessage, 
-  ChatRoom, 
-  ChatParticipant, 
-  SendMessageRequest, 
-  SendReactionRequest,
-  ChatApiResponse 
-} from "@/types/chat"
-
-// Mock data for testing
-const mockParticipants: ChatParticipant[] = [
-  {
-    id: 1,
-    name: "Dr. Martin Dupont",
-    role: "DOCTOR",
-    avatar: "/avatars/doctor1.jpg",
-    isOnline: true,
-    lastSeen: new Date().toISOString()
-  },
-  {
-    id: 2,
-    name: "Marie Laurent",
-    role: "SECRETARY",
-    avatar: "/avatars/secretary1.jpg",
-    isOnline: false,
-    lastSeen: new Date(Date.now() - 300000).toISOString() // 5 minutes ago
-  },
-  {
-    id: 3,
-    name: "Dr. Sophie Bernard",
-    role: "DOCTOR",
-    avatar: "/avatars/doctor2.jpg",
-    isOnline: true,
-    lastSeen: new Date().toISOString()
-  },
-  {
-    id: 4,
-    name: "Claire Dubois",
-    role: "SECRETARY",
-    avatar: "/avatars/secretary2.jpg",
-    isOnline: true,
-    lastSeen: new Date().toISOString()
-  },
-  {
-    id: 5,
-    name: "Dr. Jean Moreau",
-    role: "DOCTOR",
-    avatar: "/avatars/doctor3.jpg",
-    isOnline: false,
-    lastSeen: new Date(Date.now() - 600000).toISOString() // 10 minutes ago
-  },
-  {
-    id: 6,
-    name: "Sophie Martin",
-    role: "SECRETARY",
-    avatar: "/avatars/secretary3.jpg",
-    isOnline: true,
-    lastSeen: new Date().toISOString()
-  }
-]
-
-const mockMessages: ChatMessage[] = [
-  {
-    id: "1",
-    content: "Bonjour ! Avez-vous reçu les résultats du patient Martin ?",
-    senderId: 1,
-    senderName: "Dr. Martin Dupont",
-    senderRole: "DOCTOR",
-    timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    isRead: true,
-    reactions: [
-      { id: "r1", emoji: "👍", userId: 2, userName: "Marie Laurent", timestamp: new Date().toISOString() }
-    ]
-  },
-  {
-    id: "2",
-    content: "Oui, je les ai reçus ce matin. Je vais les organiser dans le dossier.",
-    senderId: 2,
-    senderName: "Marie Laurent",
-    senderRole: "SECRETARY",
-    timestamp: new Date(Date.now() - 1800000).toISOString(), // 30 minutes ago
-    isRead: true,
-    reactions: []
-  },
-  {
-    id: "3",
-    content: "Parfait ! Merci beaucoup 😊",
-    senderId: 1,
-    senderName: "Dr. Martin Dupont",
-    senderRole: "DOCTOR",
-    timestamp: new Date(Date.now() - 900000).toISOString(), // 15 minutes ago
-    isRead: false,
-    reactions: []
-  }
-]
-
-const mockConversations: ChatRoom[] = [
-  {
-    id: "conv1",
-    participants: [mockParticipants[0], mockParticipants[1]],
-    lastMessage: mockMessages[2],
-    unreadCount: 1,
-    createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "conv2",
-    participants: [mockParticipants[0], mockParticipants[2]],
-    lastMessage: undefined,
-    unreadCount: 0,
-    createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-    updatedAt: new Date(Date.now() - 172800000).toISOString()
-  }
-]
+import { apiClient } from '@/lib/axios'
+import { ChatParticipant, ChatConversation, ChatMessage, UnreadCount } from '@/types/chat'
 
 class ChatService {
-  // GET /api/v1/chat/conversations
-  async getConversations(): Promise<ChatApiResponse<ChatRoom[]>> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    return {
-      success: true,
-      data: mockConversations,
-      message: "Conversations récupérées avec succès"
+  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api/v1'
+
+  // Utility function to map database names to display names
+  private getDisplayName(dbName: string): string {
+    switch (dbName?.toLowerCase()) {
+      case 'doctor':
+        return 'Dr. Martin Dupont'
+      case 'secretary':
+        return '' // Empty string for secretary
+      default:
+        return dbName || 'Unknown'
     }
   }
 
-  // GET /api/v1/chat/participants
-  async getParticipants(): Promise<ChatApiResponse<ChatParticipant[]>> {
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
-    return {
-      success: true,
-      data: mockParticipants,
-      message: "Participants récupérés avec succès"
+  // Get all participants (users that can chat)
+  async getParticipants(): Promise<ChatParticipant[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/chat/participants`)
+      // API returns array directly: [{ "fullName": "secretary" }]
+      const data = response.data || []
+      
+      // Transform to match our ChatParticipant interface
+      return data.map((participant: any) => ({
+        id: participant.id || Math.random(), // Generate ID if not provided
+        name: this.getDisplayName(participant.fullName || participant.username),
+        role: participant.fullName?.toLowerCase().includes('secretary') ? 'SECRETARY' : 'DOCTOR',
+        avatar: participant.avatar,
+        isOnline: true, // Default to true for now
+        lastSeen: new Date().toISOString()
+      }))
+    } catch (error) {
+      console.error('Error fetching participants:', error)
+      return []
     }
   }
 
-  // GET /api/v1/chat/conversation/{userId}
-  async getConversation(userId: number): Promise<ChatApiResponse<ChatMessage[]>> {
-    await new Promise(resolve => setTimeout(resolve, 400))
-    
-    // Filter messages for this conversation
-    const conversationMessages = mockMessages.filter(msg => 
-      msg.senderId === userId || mockParticipants.find(p => p.id === userId)
-    )
-    
-    return {
-      success: true,
-      data: conversationMessages,
-      message: "Messages de la conversation récupérés"
+  // Get all conversations for the current user
+  async getConversations(): Promise<ChatConversation[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/chat/conversations`)
+      // API returns array of messages directly
+      const messages = response.data || []
+      
+      // Group messages by conversation (sender-recipient pair)
+      const conversationsMap = new Map<string, ChatConversation>()
+      
+      messages.forEach((message: any) => {
+        const conversationKey = `${Math.min(message.senderId, message.recipientId)}-${Math.max(message.senderId, message.recipientId)}`
+        
+        if (!conversationsMap.has(conversationKey)) {
+          conversationsMap.set(conversationKey, {
+            id: conversationKey,
+            participants: [
+              {
+                id: message.senderId,
+                name: this.getDisplayName(message.senderName),
+                role: message.senderName.toLowerCase().includes('secretary') ? 'SECRETARY' : 'DOCTOR',
+                isOnline: true,
+                lastSeen: new Date().toISOString()
+              },
+              {
+                id: message.recipientId,
+                name: this.getDisplayName(message.recipientName),
+                role: message.recipientName.toLowerCase().includes('secretary') ? 'SECRETARY' : 'DOCTOR',
+                isOnline: true,
+                lastSeen: new Date().toISOString()
+              }
+            ],
+            lastMessage: message,
+            unreadCount: message.isRead ? 0 : 1,
+            createdAt: message.createdAt,
+            updatedAt: message.createdAt
+          })
+        } else {
+          const conversation = conversationsMap.get(conversationKey)!
+          if (new Date(message.createdAt) > new Date(conversation.lastMessage?.createdAt || '1970-01-01')) {
+            conversation.lastMessage = message
+            conversation.updatedAt = message.createdAt
+          }
+          if (!message.isRead) {
+            conversation.unreadCount++
+          }
+        }
+      })
+      
+      return Array.from(conversationsMap.values())
+    } catch (error) {
+      console.error('Error fetching conversations:', error)
+      return []
     }
   }
 
-  // POST /api/v1/chat
-  async sendMessage(request: SendMessageRequest): Promise<ChatApiResponse<ChatMessage>> {
-    await new Promise(resolve => setTimeout(resolve, 600))
-    
-    const newMessage: ChatMessage = {
-      id: Date.now().toString(),
-      content: request.content,
-      senderId: 1, // Mock current user ID
-      senderName: "Dr. Martin Dupont", // Mock current user name
-      senderRole: "DOCTOR", // Mock current user role
-      timestamp: new Date().toISOString(),
-      isRead: false,
-      reactions: []
-    }
-    
-    // Add to mock messages
-    mockMessages.push(newMessage)
-    
-    return {
-      success: true,
-      data: newMessage,
-      message: "Message envoyé avec succès"
+  // Get all messages
+  async getMessages(conversationId?: string): Promise<ChatMessage[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/chat`)
+      // API returns array directly
+      const data = response.data || []
+      return data
+    } catch (error) {
+      console.error('Error fetching messages:', error)
+      return []
     }
   }
 
-  // GET /api/v1/chat/unread/count
-  async getUnreadCount(): Promise<ChatApiResponse<number>> {
-    await new Promise(resolve => setTimeout(resolve, 200))
-    
-    const unreadCount = mockMessages.filter(msg => !msg.isRead).length
-    
-    return {
-      success: true,
-      data: unreadCount,
-      message: "Nombre de messages non lus récupéré"
+  // Send a message
+  async sendMessage(conversationId: string, content: string): Promise<ChatMessage> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/chat`, {
+        content,
+        recipientName: conversationId // Using conversationId as recipientName for now
+      })
+      // API returns the created message directly
+      return response.data
+    } catch (error) {
+      console.error('Error sending message:', error)
+      throw error
     }
   }
 
-  // PUT /api/v1/chat/read/{senderId}
-  async markAsRead(senderId: number): Promise<ChatApiResponse<void>> {
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
-    // Mark messages as read
-    mockMessages.forEach(msg => {
-      if (msg.senderId === senderId) {
-        msg.isRead = true
+  // Get unread message count
+  async getUnreadCount(): Promise<UnreadCount> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/chat/unread/count`)
+      // API returns number directly
+      const count = response.data || 0
+      return { 
+        total: count, 
+        byConversation: {} // We'll need to implement this if needed
       }
-    })
-    
-    return {
-      success: true,
-      data: undefined,
-      message: "Messages marqués comme lus"
+    } catch (error) {
+      console.error('Error fetching unread count:', error)
+      return { total: 0, byConversation: {} }
     }
   }
 
-  // POST /api/v1/chat/message/{id}/react?reaction={emoji}
-  async addReaction(messageId: string, emoji: string): Promise<ChatApiResponse<void>> {
-    await new Promise(resolve => setTimeout(resolve, 400))
-    
-    const message = mockMessages.find(msg => msg.id === messageId)
-    if (message) {
-      const newReaction = {
-        id: Date.now().toString(),
-        emoji,
-        userId: 1, // Mock current user ID
-        userName: "Dr. Martin Dupont", // Mock current user name
-        timestamp: new Date().toISOString()
-      }
-      message.reactions.push(newReaction)
-    }
-    
-    return {
-      success: true,
-      data: undefined,
-      message: "Réaction ajoutée avec succès"
+  // Mark messages as read
+  async markAsRead(senderId: string): Promise<void> {
+    try {
+      await apiClient.put(`${this.baseUrl}/chat/read/${senderId}`)
+    } catch (error) {
+      console.error('Error marking as read:', error)
+      throw error
     }
   }
 
-  // DELETE /api/v1/chat/message/{messageId}
-  async deleteMessage(messageId: string): Promise<ChatApiResponse<void>> {
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
-    const index = mockMessages.findIndex(msg => msg.id === messageId)
-    if (index !== -1) {
-      mockMessages.splice(index, 1)
-    }
-    
-    return {
-      success: true,
-      data: undefined,
-      message: "Message supprimé avec succès"
+  // Add reaction to a message
+  async addReaction(messageId: number, reaction: string): Promise<void> {
+    try {
+      await apiClient.post(`${this.baseUrl}/chat/message/${messageId}/react?reaction=${reaction}`)
+    } catch (error) {
+      console.error('Error adding reaction:', error)
+      throw error
     }
   }
 
-  // DELETE /api/v1/chat/all
-  async deleteAllMessages(): Promise<ChatApiResponse<void>> {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    mockMessages.length = 0
-    
-    return {
-      success: true,
-      data: undefined,
-      message: "Tous les messages ont été supprimés"
+  // Remove reaction from a message
+  async removeReaction(messageId: number, reaction: string): Promise<void> {
+    try {
+      await apiClient.delete(`${this.baseUrl}/chat/message/${messageId}/react?reaction=${reaction}`)
+    } catch (error) {
+      console.error('Error removing reaction:', error)
+      throw error
+    }
+  }
+
+  // Delete a message
+  async deleteMessage(messageId: number): Promise<void> {
+    try {
+      await apiClient.delete(`${this.baseUrl}/chat/message/${messageId}`)
+    } catch (error) {
+      console.error('Error deleting message:', error)
+      throw error
+    }
+  }
+
+  // Delete all messages
+  async deleteAllMessages(): Promise<void> {
+    try {
+      await apiClient.delete(`${this.baseUrl}/chat/all`)
+    } catch (error) {
+      console.error('Error deleting all messages:', error)
+      throw error
     }
   }
 }
 
-export const chatService = new ChatService()
+export const chatService = new ChatService() 

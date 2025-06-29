@@ -1,13 +1,15 @@
 export interface ChatMessage {
-  id: string
+  id: number
   content: string
   senderId: number
   senderName: string
-  senderRole: 'DOCTOR' | 'SECRETARY'
-  timestamp: string
+  recipientId: number
+  recipientName: string
+  createdAt: string
   isRead: boolean
-  reactions: MessageReaction[]
-  attachments?: ChatAttachment[]
+  readAt: string | null
+  type: string
+  reactions: MessageReaction[] | null
 }
 
 export interface MessageReaction {
@@ -35,6 +37,15 @@ export interface ChatRoom {
   updatedAt: string
 }
 
+export interface ChatConversation {
+  id: string
+  participants: ChatParticipant[]
+  lastMessage?: ChatMessage
+  unreadCount: number
+  createdAt: string
+  updatedAt: string
+}
+
 export interface ChatParticipant {
   id: number
   name: string
@@ -42,6 +53,11 @@ export interface ChatParticipant {
   avatar?: string
   isOnline: boolean
   lastSeen?: string
+}
+
+export interface UnreadCount {
+  total: number
+  byConversation: Record<string, number>
 }
 
 // WebSocket Events
@@ -58,7 +74,7 @@ export interface SendMessageRequest {
 }
 
 export interface SendReactionRequest {
-  messageId: string
+  messageId: number
   emoji: string
 }
 

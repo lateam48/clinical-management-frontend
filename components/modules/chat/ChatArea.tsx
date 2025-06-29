@@ -13,11 +13,11 @@ interface ChatAreaProps {
   messages: ChatMessage[]
   selectedParticipant: ChatParticipant | null
   onSendMessage: (content: string) => void
-  onAddReaction: (messageId: string, emoji: string) => void
-  onDeleteMessage?: (messageId: string) => void
+  onAddReaction: (messageId: number, emoji: string) => void
+  onDeleteMessage?: (messageId: number) => void
   isSending?: boolean
   currentUserId?: number
-  unreadCount?: number
+  unreadCount?: number | { total: number; byConversation: Record<string, number> }
 }
 
 export function ChatArea({
@@ -39,6 +39,9 @@ export function ChatArea({
 
   const isOwnMessage = (message: ChatMessage) => message.senderId === currentUserId
 
+  // Extract the count value from unreadCount
+  const count = typeof unreadCount === 'object' ? unreadCount.total : (unreadCount || 0)
+
   return (
     <Card className="flex flex-col h-[600px]">
       <CardHeader className="flex-shrink-0">
@@ -52,9 +55,9 @@ export function ChatArea({
               </span>
             )}
           </div>
-          {unreadCount > 0 && (
+          {count > 0 && (
             <Badge variant="secondary">
-              {unreadCount} non lu{unreadCount > 1 ? 's' : ''}
+              {count} non lu{count > 1 ? 's' : ''}
             </Badge>
           )}
         </CardTitle>

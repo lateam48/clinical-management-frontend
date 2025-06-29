@@ -1,4 +1,3 @@
-
 import { create } from 'zustand'
 import { ChatMessage, ChatRoom, ChatParticipant } from '@/types/chat'
 
@@ -23,9 +22,9 @@ interface ChatState {
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   setUnreadCount: (count: number) => void
-  markMessageAsRead: (messageId: string) => void
-  addReactionToMessage: (messageId: string, reaction: any) => void
-  removeMessage: (messageId: string) => void
+  markMessageAsRead: (messageId: number) => void
+  addReactionToMessage: (messageId: number, reaction: any) => void
+  removeMessage: (messageId: number) => void
   clearMessages: () => void
   updateParticipantStatus: (participantId: number, isOnline: boolean) => void
 }
@@ -63,23 +62,32 @@ export const useChatStore = create<ChatState>((set, get) => ({
   
   setUnreadCount: (unreadCount) => set({ unreadCount }),
   
-  markMessageAsRead: (messageId) => set((state) => ({
-    messages: state.messages.map(msg => 
-      msg.id === messageId ? { ...msg, isRead: true } : msg
-    )
-  })),
+  markMessageAsRead: (messageId) => {
+    set((state) => ({
+      messages: state.messages.map((message) =>
+        message.id === messageId ? { ...message, isRead: true } : message
+      ),
+    }))
+  },
   
-  addReactionToMessage: (messageId, reaction) => set((state) => ({
-    messages: state.messages.map(msg => 
-      msg.id === messageId 
-        ? { ...msg, reactions: [...msg.reactions, reaction] }
-        : msg
-    )
-  })),
+  addReactionToMessage: (messageId: number, reaction: any) => {
+    set((state) => ({
+      messages: state.messages.map((message) =>
+        message.id === messageId
+          ? {
+              ...message,
+              reactions: message.reactions ? [...message.reactions, reaction] : [reaction],
+            }
+          : message
+      ),
+    }))
+  },
   
-  removeMessage: (messageId) => set((state) => ({
-    messages: state.messages.filter(msg => msg.id !== messageId)
-  })),
+  removeMessage: (messageId) => {
+    set((state) => ({
+      messages: state.messages.filter((message) => message.id !== messageId),
+    }))
+  },
   
   clearMessages: () => set({ messages: [], unreadCount: 0 }),
   

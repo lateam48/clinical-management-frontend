@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { Check, CheckCheck, MoreHorizontal, Smile } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -16,8 +17,8 @@ import { ChatMessage } from '@/types/chat'
 interface MessageBubbleProps {
   message: ChatMessage
   isOwnMessage: boolean
-  onAddReaction?: (messageId: string, emoji: string) => void
-  onDeleteMessage?: (messageId: string) => void
+  onAddReaction: (messageId: number, emoji: string) => void
+  onDeleteMessage?: (messageId: number) => void
   currentUserId?: number
 }
 
@@ -28,6 +29,7 @@ export function MessageBubble({
   onDeleteMessage,
   currentUserId
 }: MessageBubbleProps) {
+  const { data: session } = useSession()
   const [isClient, setIsClient] = useState(false)
 
   // Handle hydration
@@ -37,19 +39,48 @@ export function MessageBubble({
 
   const formatTime = (timestamp: string) => {
     if (!isClient) return ''
-    return new Date(timestamp).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    })
+    try {
+      const date = new Date(timestamp)
+      return date.toLocaleString('fr-FR', { 
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit', 
+        minute: '2-digit'
+      })
+    } catch (error) {
+      console.error('Error formatting date:', timestamp, error)
+      return 'Invalid Date'
+    }
   }
 
   const handleReaction = (emoji: string) => {
-    onAddReaction?.(message.id, emoji)
+    onAddReaction(message.id, emoji)
   }
 
   const handleDelete = () => {
     onDeleteMessage?.(message.id)
   }
+
+  // Get the correct sender name based on session and message data
+  const getDisplayName = (senderName: string, senderId: number) => {
+    // If it's the current user's message, use session name
+    if (isOwnMessage && session?.user?.name) {
+      return session.user.name
+    }
+    
+    // For other users, map the database names to display names
+    switch (senderName?.toLowerCase()) {
+      case 'doctor':
+        return 'Dr. Martin Dupont'
+      case 'secretary':
+        return '' // Empty string for secretary
+      default:
+        return senderName || 'Unknown'
+    }
+  }
+  
+  const senderName = getDisplayName(message.senderName, message.senderId)
 
   return (
     <div className={`flex gap-3 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
@@ -57,14 +88,14 @@ export function MessageBubble({
         <Avatar className="h-8 w-8 mt-1">
           <AvatarImage src="/avatars/default.jpg" />
           <AvatarFallback className="text-xs">
-            {message.senderName.split(' ').map(n => n[0]).join('')}
+            {senderName.split(' ').map(n => n[0]).join('')}
           </AvatarFallback>
         </Avatar>
       )}
       
       <div className={`flex flex-col max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
         {!isOwnMessage && (
-          <p className="text-xs text-muted-foreground mb-1">{message.senderName}</p>
+          <p className="text-xs text-muted-foreground mb-1 font-medium">{senderName}</p>
         )}
         
         <div className={`relative group ${isOwnMessage ? 'order-2' : 'order-1'}`}>
@@ -109,7 +140,7 @@ export function MessageBubble({
         {/* Message metadata */}
         <div className={`flex items-center gap-2 mt-1 ${isOwnMessage ? 'order-1' : 'order-2'}`}>
           <span className="text-xs text-muted-foreground">
-            {formatTime(message.timestamp)}
+            {formatTime(message.createdAt)}
           </span>
           
           {isOwnMessage && (

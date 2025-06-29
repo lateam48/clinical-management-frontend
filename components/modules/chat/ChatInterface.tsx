@@ -14,13 +14,13 @@ interface ChatInterfaceProps {
   selectedParticipant: ChatParticipant | null
   onSelectParticipant: (participant: ChatParticipant) => void
   onSendMessage: (content: string) => void
-  onAddReaction: (messageId: string, emoji: string) => void
-  onDeleteMessage?: (messageId: string) => void
+  onAddReaction: (messageId: number, emoji: string) => void
+  onDeleteMessage?: (messageId: number) => void
   onDeleteAllMessages?: () => void
   isSending?: boolean
   isDeletingAll?: boolean
   currentUserId?: number
-  unreadCount?: number
+  unreadCount?: number | { total: number; byConversation: Record<string, number> }
   title: string
   participantRole: 'DOCTOR' | 'SECRETARY'
 }
@@ -73,7 +73,10 @@ export function ChatInterface({
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">
-            {unreadCount} message{unreadCount > 1 ? 's' : ''} non lu{unreadCount > 1 ? 's' : ''}
+            {(() => {
+              const count = typeof unreadCount === 'object' ? unreadCount.total : (unreadCount || 0)
+              return `${count} message${count > 1 ? 's' : ''} non lu${count > 1 ? 's' : ''}`
+            })()}
           </Badge>
           {onDeleteAllMessages && (
             <Button 

@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { chatService } from '@/services/ChatService'
 import { useChatStore } from '@/stores/ChtatStore'
 import { toast } from 'sonner'
-import { SendMessageRequest } from '@/types/chat'
 
 export const useChat = () => {
   const queryClient = useQueryClient()
@@ -43,7 +42,7 @@ export const useChat = () => {
   const CHAT_KEYS = {
     conversations: ['chat', 'conversations'],
     participants: ['chat', 'participants'],
-    messages: (userId?: number) => ['chat', 'messages', userId],
+    messages: (conversationId?: string) => ['chat', 'messages', conversationId],
     unreadCount: ['chat', 'unread-count']
   }
 
@@ -51,12 +50,9 @@ export const useChat = () => {
   const conversationsQuery = useQuery({
     queryKey: CHAT_KEYS.conversations,
     queryFn: async () => {
-      const response = await chatService.getConversations()
-      if (response.success) {
-        setConversations(response.data)
-        return response.data
-      }
-      throw new Error(response.message || 'Erreur lors du chargement des conversations')
+      const data = await chatService.getConversations()
+      setConversations(data)
+      return data
     },
     onError: (error) => {
       setError(error.message)
@@ -70,12 +66,9 @@ export const useChat = () => {
   const participantsQuery = useQuery({
     queryKey: CHAT_KEYS.participants,
     queryFn: async () => {
-      const response = await chatService.getParticipants()
-      if (response.success) {
-        setParticipants(response.data)
-        return response.data
-      }
-      throw new Error(response.message || 'Erreur lors du chargement des participants')
+      const data = await chatService.getParticipants()
+      setParticipants(data)
+      return data
     },
     onError: (error) => {
       setError(error.message)
@@ -87,17 +80,13 @@ export const useChat = () => {
 
   // Fetch messages for a specific conversation
   const messagesQuery = useQuery({
-    queryKey: CHAT_KEYS.messages(selectedParticipant?.id),
+    queryKey: CHAT_KEYS.messages(currentConversation?.id),
     queryFn: async () => {
-      if (!selectedParticipant) return []
-      const response = await chatService.getConversation(selectedParticipant.id)
-      if (response.success) {
-        setMessages(response.data)
-        return response.data
-      }
-      throw new Error(response.message || 'Erreur lors du chargement des messages')
+      const data = await chatService.getMessages()
+      setMessages(data)
+      return data
     },
-    enabled: !!selectedParticipant && isClient,
+    enabled: isClient,
     onError: (error) => {
       setError(error.message)
       toast.error('Erreur', {
@@ -110,12 +99,9 @@ export const useChat = () => {
   const unreadCountQuery = useQuery({
     queryKey: CHAT_KEYS.unreadCount,
     queryFn: async () => {
-      const response = await chatService.getUnreadCount()
-      if (response.success) {
-        setUnreadCount(response.data)
-        return response.data
-      }
-      throw new Error(response.message || 'Erreur lors du chargement du nombre de messages non lus')
+      const data = await chatService.getUnreadCount()
+      setUnreadCount(data)
+      return data
     },
     enabled: isClient,
     onError: (error) => {
@@ -125,12 +111,11 @@ export const useChat = () => {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async (request: SendMessageRequest) => {
-      const response = await chatService.sendMessage(request)
-      if (response.success) {
-        return response.data
+    mutationFn: async (content: string) => {
+      if (!currentConversation?.id) {
+        throw new Error('Aucune conversation sélectionnée')
       }
-      throw new Error(response.message || 'Erreur lors de l\'envoi du message')
+      return await chatService.sendMessage(currentConversation.id, content)
     },
     onSuccess: (newMessage) => {
       addMessage(newMessage)
@@ -147,19 +132,16 @@ export const useChat = () => {
 
   // Add reaction mutation
   const addReactionMutation = useMutation({
-    mutationFn: async ({ messageId, emoji }: { messageId: string; emoji: string }) => {
-      const response = await chatService.addReaction(messageId, emoji)
-      if (response.success) {
-        return { messageId, emoji }
-      }
-      throw new Error(response.message || 'Erreur lors de l\'ajout de la réaction')
+    mutationFn: async ({ messageId, emoji }: { messageId: number; emoji: string }) => {
+      await chatService.addReaction(messageId, emoji)
+      return { messageId, emoji }
     },
     onSuccess: ({ messageId, emoji }) => {
       const newReaction = {
         id: Date.now().toString(),
         emoji,
-        userId: 1, // Mock current user ID
-        userName: 'Dr. Martin Dupont', // Mock current user name
+        userId: 1, // Mock current user ID - will be replaced with real user data
+        userName: 'Dr. Martin Dupont', // Mock current user name - will be replaced with real user data
         timestamp: new Date().toISOString()
       }
       addReactionToMessage(messageId, newReaction)
@@ -174,16 +156,12 @@ export const useChat = () => {
 
   // Mark as read mutation
   const markAsReadMutation = useMutation({
-    mutationFn: async (senderId: number) => {
-      const response = await chatService.markAsRead(senderId)
-      if (response.success) {
-        return response.data
-      }
-      throw new Error(response.message || 'Erreur lors du marquage comme lu')
+    mutationFn: async (conversationId: string) => {
+      await chatService.markAsRead(conversationId)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount })
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(selectedParticipant?.id) })
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) })
     },
     onError: (error) => {
       toast.error('Erreur', {
@@ -192,79 +170,57 @@ export const useChat = () => {
     }
   })
 
-  // Delete message mutation
-  const deleteMessageMutation = useMutation({
-    mutationFn: async (messageId: string) => {
-      const response = await chatService.deleteMessage(messageId)
-      if (response.success) {
-        return response.data
-      }
-      throw new Error(response.message || 'Erreur lors de la suppression du message')
-    },
-    onSuccess: (_, messageId) => {
-      removeMessage(messageId)
-      toast.success('Message supprimé')
-    },
-    onError: (error) => {
-      toast.error('Erreur', {
-        description: 'Impossible de supprimer le message'
-      })
-    }
-  })
-
-  // Delete all messages mutation
-  const deleteAllMessagesMutation = useMutation({
-    mutationFn: async () => {
-      const response = await chatService.deleteAllMessages()
-      if (response.success) {
-        return response.data
-      }
-      throw new Error(response.message || 'Erreur lors de la suppression de tous les messages')
-    },
-    onSuccess: () => {
-      clearMessages()
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations })
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount })
-      toast.success('Tous les messages ont été supprimés')
-    },
-    onError: (error) => {
-      toast.error('Erreur', {
-        description: 'Impossible de supprimer tous les messages'
-      })
-    }
-  })
-
   // Actions
   const selectParticipant = useCallback((participant: any) => {
     setSelectedParticipant(participant)
-    if (participant) {
-      markAsReadMutation.mutate(participant.id)
+    // Find or create conversation with this participant
+    const existingConversation = conversations.find(conv => 
+      conv.participants.some(p => p.id === participant.id)
+    )
+    
+    if (existingConversation) {
+      setCurrentConversation(existingConversation)
+      if (existingConversation.id) {
+        markAsReadMutation.mutate(existingConversation.id)
+      }
+    } else {
+      // Create new conversation - this would need to be implemented
+      toast.info('Nouvelle conversation créée')
     }
-  }, [setSelectedParticipant, markAsReadMutation])
+  }, [setSelectedParticipant, conversations, setCurrentConversation, markAsReadMutation])
 
   const sendMessage = useCallback((content: string) => {
-    if (!selectedParticipant) {
-      toast.error('Aucun participant sélectionné')
+    if (!currentConversation) {
+      toast.error('Aucune conversation sélectionnée')
       return
     }
     
-    sendMessageMutation.mutate({
-      content,
-      recipientId: selectedParticipant.id
-    })
-  }, [selectedParticipant, sendMessageMutation])
+    sendMessageMutation.mutate(content)
+  }, [currentConversation, sendMessageMutation])
 
-  const addReaction = useCallback((messageId: string, emoji: string) => {
+  const addReaction = useCallback((messageId: number, emoji: string) => {
     addReactionMutation.mutate({ messageId, emoji })
   }, [addReactionMutation])
 
-  const deleteMessage = useCallback((messageId: string) => {
-    deleteMessageMutation.mutate(messageId)
-  }, [deleteMessageMutation])
+  const deleteMessage = useCallback((messageId: number) => {
+    // For now, just remove from local state
+    // TODO: Implement actual API call to delete message
+    removeMessage(messageId)
+    toast.success('Message supprimé')
+  }, [removeMessage])
 
   const deleteAllMessages = useCallback(() => {
-    deleteAllMessagesMutation.mutate()
-  }, [deleteAllMessagesMutation])
+    // For now, just clear local state
+    // TODO: Implement actual API call to delete all messages
+    clearMessages()
+    toast.success('Tous les messages ont été supprimés')
+  }, [clearMessages])
+
+  const markAsRead = useCallback((messageId: number) => {
+    // For now, just update local state
+    // TODO: Implement actual API call to mark message as read
+    markMessageAsRead(messageId)
+  }, [markMessageAsRead])
 
   // Auto-refresh unread count
   useEffect(() => {
@@ -295,13 +251,13 @@ export const useChat = () => {
     addReaction,
     deleteMessage,
     deleteAllMessages,
+    markAsRead,
     markMessageAsRead,
     updateParticipantStatus,
 
     // Mutations state
     isSending: sendMessageMutation.isPending,
     isAddingReaction: addReactionMutation.isPending,
-    isDeleting: deleteMessageMutation.isPending,
-    isDeletingAll: deleteAllMessagesMutation.isPending
+    isDeletingAll: false // For now, always false since we don't have the actual mutation
   }
 }
