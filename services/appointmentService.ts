@@ -1,75 +1,98 @@
 import { apiClient } from "@/lib/axios"
 import type {
-  AppointmentRequestDTO,
   AppointmentResponseDTO,
+  AppointmentCreateDTO,
+  AppointmentUpdateDTO,
   AppointmentFilters,
-  PaginatedResponse,
-  AppointmentStatus,
+  TimeSlotConflict,
 } from "@/types/appointment"
 
 export const appointmentService = {
-  // Créer un rendez-vous
-  async createAppointment(data: AppointmentRequestDTO): Promise<AppointmentResponseDTO> {
-    const response = await apiClient.post("/appointments", data)
-    return response.data
+  // Récupérer tous les rendez-vous
+  getAll: async (): Promise<AppointmentResponseDTO[]> => {
+    const response = await apiClient.get("/appointments")
+    return response.data.content
   },
 
-  // Obtenir un rendez-vous par ID
-  async getAppointment(id: number): Promise<AppointmentResponseDTO> {
+  // Récupérer les rendez-vous avec filtres
+  getFiltered: async (filters: AppointmentFilters): Promise<AppointmentResponseDTO[]> => {
+    const params = new URLSearchParams()
+
+    if (filters.doctor) params.append("doctorId", filters.doctor)
+    if (filters.date) params.append("date", filters.date)
+    if (filters.room) params.append("room", filters.room)
+    if (filters.status) params.append("status", filters.status)
+
+    const response = await apiClient.get(`/appointments?${params.toString()}`)
+    return response.data.content
+  },
+
+  // Récupérer un rendez-vous par ID
+  getById: async (id: number): Promise<AppointmentResponseDTO> => {
     const response = await apiClient.get(`/appointments/${id}`)
     return response.data
   },
 
-  // Lister les rendez-vous avec pagination
-  async listAppointments(page = 0, size = 10): Promise<PaginatedResponse<AppointmentResponseDTO>> {
-    const response = await apiClient.get("/appointments", {
-      params: { page, size },
-    })
+  // Créer un nouveau rendez-vous
+  create: async (data: AppointmentCreateDTO): Promise<AppointmentResponseDTO> => {
+    const response = await apiClient.post("/appointments", data)
     return response.data
   },
 
   // Mettre à jour un rendez-vous
-  async updateAppointment(id: number, data: AppointmentRequestDTO): Promise<AppointmentResponseDTO> {
+  update: async (id: number, data: AppointmentUpdateDTO): Promise<AppointmentResponseDTO> => {
     const response = await apiClient.put(`/appointments/${id}`, data)
     return response.data
   },
 
   // Supprimer un rendez-vous
-  async deleteAppointment(id: number): Promise<void> {
+  delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/appointments/${id}`)
   },
 
   // Annuler un rendez-vous
-  async cancelAppointment(id: number, initiatedBy: string): Promise<string> {
-    const response = await apiClient.post(`/appointments/${id}/cancel`, null, {
-      params: { initiatedBy },
-    })
+  cancel: async (id: number, initiatedBy: string, reason?: string): Promise<AppointmentResponseDTO> => {
+    const params = new URLSearchParams({ initiatedBy })
+    if (reason) params.append("reason", reason)
+    const response = await apiClient.post(`/appointments/${id}/cancel?${params.toString()}`)
     return response.data
   },
 
-  // Filtrer les rendez-vous
-  async filterAppointments(
-    filters: AppointmentFilters,
-    page = 0,
-    size = 10,
-  ): Promise<PaginatedResponse<AppointmentResponseDTO>> {
-    const response = await apiClient.get("/appointments/filter", {
-      params: { ...filters, page, size },
+  // Vérifier les conflits de créneaux
+  checkTimeSlotConflict: async (doctor: string, dateTime: string, excludeId?: number): Promise<TimeSlotConflict> => {
+    const params = new URLSearchParams({
+      doctor,
+      dateTime,
     })
-    return response.data
-  },
 
-  // Obtenir les statuts disponibles
-  async getStatuses(): Promise<AppointmentStatus[]> {
-    const response = await apiClient.get("/appointments/statuses")
+    if (excludeId) {
+      params.append("excludeId", excludeId.toString())
+    }
+
+    const response = await apiClient.get(`/appointments/check-conflict?${params.toString()}`)
     return response.data
   },
 
   // Obtenir des créneaux alternatifs
-  async getAlternativeSlots(doctor: string, dateTime: string): Promise<string[]> {
-    const response = await apiClient.get("/appointments/alternatives", {
-      params: { doctor, dateTime },
+  getAlternativeSlots: async (doctor: string, dateTime: string): Promise<string[]> => {
+    const params = new URLSearchParams({
+      doctor,
+      dateTime,
     })
+
+    const response = await apiClient.get(`/appointments/alternative-slots?${params.toString()}`)
+    return response.data
+  },
+
+  // Marquer comme terminé
+  markAsCompleted: async (id: number): Promise<AppointmentResponseDTO> => {
+    const response = await apiClient.put(`/appointments/${id}/complete`)
+    return response.data
+  },
+
+  // Marquer comme absent
+  markAsNoShow: async (id: number): Promise<AppointmentResponseDTO> => {
+    const response = await apiClient.put(`/appointments/${id}`, { status: "NO_SHOW" })
     return response.data
   },
 }

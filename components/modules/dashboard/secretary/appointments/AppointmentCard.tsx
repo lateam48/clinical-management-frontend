@@ -2,11 +2,12 @@
 
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { Calendar, Clock, User, MapPin, FileText, MoreHorizontal, Edit, Trash2, XCircle } from "lucide-react"
+import { Calendar, Clock, User, MapPin, FileText, MoreHorizontal, Edit, Trash2, AlertCircle } from "lucide-react"
+import { useCallback } from "react"
 
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,35 +15,80 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
+import { useDeleteAppointment, useCancelAppointment, useMarkAsCompleted } from "@/hooks/useAppointments"
+import { useStaff } from "@/hooks/useUsers"
 import type { AppointmentResponseDTO } from "@/types/appointment"
 
 interface AppointmentCardProps {
   appointment: AppointmentResponseDTO
   onEdit?: (appointment: AppointmentResponseDTO) => void
-  onDelete?: (id: number) => void
-  onCancel?: (id: number) => void
-}
-
-const statusColors = {
-  SCHEDULED: "bg-blue-100 text-blue-800",
-  COMPLETED: "bg-green-100 text-green-800",
-  CANCELLED: "bg-gray-100 text-gray-800",
-  LATE_CANCELLED: "bg-orange-100 text-orange-800",
-  CLINIC_CANCELLED: "bg-red-100 text-red-800",
-  NO_SHOW: "bg-purple-100 text-purple-800",
+  readOnly?: boolean
 }
 
 const statusLabels = {
   SCHEDULED: "Programmé",
   COMPLETED: "Terminé",
   CANCELLED: "Annulé",
-  LATE_CANCELLED: "Annulé (Tardif)",
-  CLINIC_CANCELLED: "Annulé (Clinique)",
+  LATE_CANCELLED: "Annulé tardivement",
+  CLINIC_CANCELLED: "Annulé par la clinique",
   NO_SHOW: "Absent",
-}
+} as const
 
-export function AppointmentCard({ appointment, onEdit, onDelete, onCancel }: Readonly<AppointmentCardProps>) {
+const statusColors = {
+  SCHEDULED: "bg-blue-100 text-blue-800 border-blue-200",
+  COMPLETED: "bg-green-100 text-green-800 border-green-200",
+  CANCELLED: "bg-red-100 text-red-800 border-red-200",
+  LATE_CANCELLED: "bg-orange-100 text-orange-800 border-orange-200",
+  CLINIC_CANCELLED: "bg-purple-100 text-purple-800 border-purple-200",
+  NO_SHOW: "bg-gray-100 text-gray-800 border-gray-200",
+} as const
+
+export function AppointmentCard({ appointment, onEdit, readOnly }: Readonly<AppointmentCardProps>) {
+  const deleteAppointment = useDeleteAppointment()
+  const cancelAppointment = useCancelAppointment()
+  const markAsCompleted = useMarkAsCompleted()
+
+  const { getStaff } = useStaff({ role: 'DOCTOR' })
+  const { data: doctors, isLoading: doctorsLoading } = getStaff
+
+  const getDoctorName = useCallback(
+    (doctorId: string | number | undefined | null): string => {
+      if (!doctorId) return "Médecin inconnu"
+      if (doctorsLoading) return "Chargement..."
+      if (!doctors) return "Médecin inconnu"
+      const doctor = doctors.find(d => d.id === Number(doctorId))
+      return doctor ? `${doctor.firstName} ${doctor.lastName}` : "Médecin non trouvé"
+    },
+    [doctors, doctorsLoading]
+  )
+
+  const handleDelete = async (): Promise<void> => {
+    await deleteAppointment.mutateAsync(appointment.id)
+  }
+
+  const handleCancel = async (): Promise<void> => {
+    await cancelAppointment.mutateAsync({
+      id: appointment.id,
+      initiatedBy: "SECRETARY",
+    })
+  }
+
+  const handleMarkAsCompleted = async (): Promise<void> => {
+    await markAsCompleted.mutateAsync(appointment.id)
+  }
+
   const appointmentDate = new Date(appointment.dateTime)
   const canCancel = appointment.status === "SCHEDULED"
   const canEdit = appointment.status === "SCHEDULED"
@@ -50,82 +96,132 @@ export function AppointmentCard({ appointment, onEdit, onDelete, onCancel }: Rea
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">{format(appointmentDate, "EEEE dd MMMM yyyy", { locale: fr })}</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Calendar className="h-4 w-4 text-blue-600" />
             </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{format(appointmentDate, "HH:mm")}</span>
+            <div>
+              <h3 className="font-semibold">{appointment.patientName}</h3>
+              <p className="text-sm text-muted-foreground">ID: {appointment.patientId}</p>
             </div>
           </div>
-
           <div className="flex items-center gap-2">
             <Badge className={statusColors[appointment.status]}>{statusLabels[appointment.status]}</Badge>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {canEdit && onEdit && (
-                  <DropdownMenuItem onClick={() => onEdit(appointment)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Modifier
-                  </DropdownMenuItem>
-                )}
-                {canCancel && onCancel && (
-                  <DropdownMenuItem onClick={() => onCancel(appointment.id)}>
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Annuler
-                  </DropdownMenuItem>
-                )}
-                {onDelete && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onDelete(appointment.id)} className="text-destructive">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Supprimer
+            {!readOnly && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {canEdit && (
+                    <DropdownMenuItem onClick={() => onEdit?.(appointment)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Modifier
                     </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  )}
+                  {canEdit && (
+                    <DropdownMenuItem onClick={handleMarkAsCompleted}>
+                      ✓
+                      Marquer comme terminé
+                    </DropdownMenuItem>
+                  )}
+                  {canCancel && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <AlertCircle className="h-4 w-4 mr-2" />
+                            Annuler
+                          </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Annuler le rendez-vous</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Êtes-vous sûr de vouloir annuler ce rendez-vous ? Le patient sera notifié.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Non</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleCancel}>Oui, annuler</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Supprimer
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Supprimer le rendez-vous</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Êtes-vous sûr de vouloir supprimer définitivement ce rendez-vous ? Cette action est irréversible.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+                          Supprimer
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </CardHeader>
-
       <CardContent className="space-y-3">
-        <div className="flex items-center gap-2">
-          <User className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{appointment.patientName}</span>
-          <span className="text-sm text-muted-foreground">(ID: {appointment.patientId})</span>
+        <div className="grid grid-cols-2 gap-8">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">{format(appointmentDate, "HH:mm", { locale: fr })}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">{getDoctorName(appointment.doctor)}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">{format(appointmentDate, "dd/MM/yyyy", { locale: fr })}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm">{appointment.room}</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <User className="h-4 w-4 text-muted-foreground" />
-          <span>{appointment.doctor}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-muted-foreground" />
-          <span>{appointment.room}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm">{appointment.reason}</span>
-        </div>
+        {appointment.reason && (
+          <div className="flex items-start gap-2">
+            <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <p className="text-sm text-muted-foreground line-clamp-2">{appointment.reason}</p>
+          </div>
+        )}
 
         {appointment.cancellationInitiator && (
-          <div className="pt-2 border-t">
-            <p className="text-xs text-muted-foreground">Annulé par: {appointment.cancellationInitiator}</p>
-            {appointment.cancellationReason && (
-              <p className="text-xs text-muted-foreground">Raison: {appointment.cancellationReason}</p>
+          <div className="flex items-center gap-2 p-2 bg-orange-50 rounded-md">
+            <AlertCircle className="h-4 w-4 text-orange-600" />
+            <span className="text-sm text-orange-700">Annulé par {appointment.cancellationInitiator}</span>
+          </div>
+        )}
+
+        {!readOnly && (
+          <div className="flex gap-2 mt-4">
+            {canEdit && (
+              <Button onClick={handleMarkAsCompleted} variant="secondary" className="flex items-center gap-2">
+                ✓ Marquer comme terminé
+              </Button>
             )}
           </div>
         )}

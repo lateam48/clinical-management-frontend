@@ -1,7 +1,15 @@
+"use client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Stethoscope, Calendar, Receipt, BarChart3, Settings } from "lucide-react"
+import { useAllAppointments } from "@/hooks/useAppointments"
+import { isSameMonth } from "date-fns"
+import type { AppointmentResponseDTO } from "@/types/appointment"
 
 export function AdminDashboard() {
+    const { data: allAppointments, isLoading } = useAllAppointments();
+    const now = new Date();
+    const monthAppointments = allAppointments?.filter((a: AppointmentResponseDTO) => isSameMonth(new Date(a.dateTime), now)) ?? [];
+
     return (
         <div className="space-y-6">
             <div>
@@ -38,7 +46,7 @@ export function AdminDashboard() {
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">320</div>
+                        <div className="text-2xl font-bold">{isLoading ? "..." : monthAppointments.length}</div>
                         <p className="text-xs text-muted-foreground">+15% ce mois</p>
                     </CardContent>
                 </Card>

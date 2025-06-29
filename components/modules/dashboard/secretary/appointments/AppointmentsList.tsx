@@ -1,200 +1,209 @@
 "use client"
 
 import { useState } from "react"
-import { Plus } from "lucide-react"
+import { Plus, Calendar, Filter } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { AppointmentCard } from "./AppointmentCard"
 import { AppointmentForm } from "./AppointmentForm"
-import { AppointmentFilters } from "./AppointmentFilters"
-
-import {
-  useAppointments,
-  useFilteredAppointments,
-  useDeleteAppointment,
-  useCancelAppointment,
-} from "@/hooks/useAppointments"
-import type { AppointmentResponseDTO, AppointmentFilters as FiltersType } from "@/types/appointment"
+import { AppointmentFiltersComponent } from "./AppointmentFilters"
 import { AppointmentsLoading } from "@/components/modules/dashboard/secretary/appointments/AppointmentsLoading"
 import { AppointmentsError } from "@/components/modules/dashboard/secretary/appointments/AppointmentsError"
-import { PaginationControls } from "@/components/ui/pagination-controls"
+
+import { useAllAppointments, useFilteredAppointments } from "@/hooks/useAppointments"
+import type { AppointmentResponseDTO, AppointmentFilters } from "@/types/appointment"
 
 export function AppointmentsList() {
-  const [page, setPage] = useState(0)
-  const [filters, setFilters] = useState<FiltersType>({})
-  const [showForm, setShowForm] = useState(false)
-  const [editingAppointment, setEditingAppointment] = useState<AppointmentResponseDTO>()
-  const [deletingId, setDeletingId] = useState<number>()
-  const [cancellingId, setCancellingId] = useState<number>()
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentResponseDTO>()
+  const [filters, setFilters] = useState<AppointmentFilters>({})
+  const [activeTab, setActiveTab] = useState("all")
 
-  const deleteAppointment = useDeleteAppointment()
-  const cancelAppointment = useCancelAppointment()
+  const { data: allAppointments, isLoading, error, refetch } = useAllAppointments()
+  const { data: filteredAppointments } = useFilteredAppointments(filters)
 
-  const hasFilters = !!(filters.doctor ?? filters.date ?? filters.room)
+  // Debug : vérifier la structure des données
+  console.log("allAppointments:", allAppointments)
+  console.log("Type of allAppointments:", typeof allAppointments)
+  console.log("Is array:", Array.isArray(allAppointments))
 
-  // Call both hooks unconditionally to follow Rules of Hooks
-  const {
-    data: allAppointmentsData,
-    isLoading: isLoadingAll,
-    error: errorAll,
-  } = useAppointments(page, 10)
-
-  const {
-    data: filteredAppointmentsData,
-    isLoading: isLoadingFiltered,
-    error: errorFiltered,
-  } = useFilteredAppointments(filters, page, 10)
-
-  // Choose which data to use based on filters
-  const appointmentsData = hasFilters ? filteredAppointmentsData : allAppointmentsData
-  const isLoading = hasFilters ? isLoadingFiltered : isLoadingAll
-  const error = hasFilters ? errorFiltered : errorAll
-
-  const handleEdit = (appointment: AppointmentResponseDTO) => {
-    setEditingAppointment(appointment)
-    setShowForm(true)
+  // Fonction utilitaire pour s'assurer qu'on a un tableau
+  const ensureArray = (
+    data: AppointmentResponseDTO[] | { data?: AppointmentResponseDTO[]; appointments?: AppointmentResponseDTO[]; content?: AppointmentResponseDTO[] } | undefined
+  ): AppointmentResponseDTO[] => {
+    if (Array.isArray(data)) return data
+    if (data && typeof data === 'object' && Array.isArray(data.content)) return data.content
+    if (data && typeof data === 'object' && Array.isArray(data.data)) return data.data
+    if (data && typeof data === 'object' && Array.isArray(data.appointments)) return data.appointments
+    return []
   }
 
-  const handleDelete = async () => {
-    if (deletingId) {
-      await deleteAppointment.mutateAsync(deletingId)
-      setDeletingId(undefined)
-    }
+  const safeAllAppointments = ensureArray(allAppointments)
+  const safeFilteredAppointments = ensureArray(filteredAppointments)
+  
+  const appointments = Object.values(filters).some(Boolean) ? safeFilteredAppointments : safeAllAppointments
+
+  const handleCreateNew = (): void => {
+    setSelectedAppointment(undefined)
+    setIsFormOpen(true)
   }
 
-  const handleCancel = async () => {
-    if (cancellingId) {
-      await cancelAppointment.mutateAsync({
-        id: cancellingId,
-        initiatedBy: "SECRETARY",
-      })
-      setCancellingId(undefined)
-    }
+  const handleEdit = (appointment: AppointmentResponseDTO): void => {
+    setSelectedAppointment(appointment)
+    setIsFormOpen(true)
   }
 
-  const handleFormSuccess = () => {
-    setShowForm(false)
-    setEditingAppointment(undefined)
+  const handleFormSuccess = (): void => {
+    setIsFormOpen(false)
+    setSelectedAppointment(undefined)
+    refetch()
   }
 
-  const handleFormCancel = () => {
-    setShowForm(false)
-    setEditingAppointment(undefined)
+  const handleFormCancel = (): void => {
+    setIsFormOpen(false)
+    setSelectedAppointment(undefined)
   }
 
-  const resetFilters = () => {
+  const handleSearch = (): void => {
+    // La recherche est automatique via useFilteredAppointments
+  }
+
+  const handleResetFilters = (): void => {
     setFilters({})
-    setPage(0)
   }
 
-  if (isLoading) return <AppointmentsLoading />
-  if (error) return <AppointmentsError error={error} />
+  // Filtrer par statut selon l'onglet actif
+  const getFilteredByTab = (appointments: AppointmentResponseDTO[] | undefined) => {
+    if (!appointments) return []
+
+    switch (activeTab) {
+      case "scheduled":
+        return appointments.filter((apt) => apt.status === "SCHEDULED")
+      case "completed":
+        return appointments.filter((apt) => apt.status === "COMPLETED")
+      case "cancelled":
+        return appointments.filter(
+          (apt) => apt.status === "CANCELLED" || apt.status === "LATE_CANCELLED" || apt.status === "CLINIC_CANCELLED",
+        )
+      default:
+        return appointments
+    }
+  }
+
+  const tabAppointments = getFilteredByTab(appointments)
+
+  if (isLoading) {
+    return <AppointmentsLoading />
+  }
+
+  if (error) {
+    return <AppointmentsError error={error} onRetry={refetch} />
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Rendez-vous</h1>
-          <p className="text-muted-foreground">Gérez les rendez-vous de la clinique</p>
+          <h1 className="text-3xl font-bold tracking-tight">Rendez-vous</h1>
+          <p className="text-muted-foreground">Gérez les rendez-vous des patients</p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nouveau Rendez-vous
+        <Button onClick={handleCreateNew} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Nouveau rendez-vous
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Filtres */}
-        <div className="lg:col-span-1">
-          <AppointmentFilters filters={filters} onFiltersChange={setFilters} onReset={resetFilters} />
-        </div>
+      {/* Filtres */}
+      <AppointmentFiltersComponent
+        filters={filters}
+        onFiltersChange={setFilters}
+        onSearch={handleSearch}
+        onReset={handleResetFilters}
+      />
 
-        {/* Liste des rendez-vous */}
-        <div className="lg:col-span-3 space-y-4">
-          {appointmentsData?.content.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Aucun rendez-vous trouvé</p>
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-4">
-                {appointmentsData?.content.map((appointment) => (
-                  <AppointmentCard
-                    key={appointment.id}
-                    appointment={appointment}
-                    onEdit={handleEdit}
-                    onDelete={setDeletingId}
-                    onCancel={setCancellingId}
-                  />
-                ))}
-              </div>
+      {/* Onglets et liste */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Liste des rendez-vous
+          </CardTitle>
+          <CardDescription>
+            {tabAppointments.length} rendez-vous trouvé{tabAppointments.length > 1 ? "s" : ""}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="all">Tous ({safeAllAppointments.length})</TabsTrigger>
+              <TabsTrigger value="scheduled">
+                Programmés ({safeAllAppointments.filter((apt) => apt.status === "SCHEDULED").length})
+              </TabsTrigger>
+              <TabsTrigger value="completed">
+                Terminés ({safeAllAppointments.filter((apt) => apt.status === "COMPLETED").length})
+              </TabsTrigger>
+              <TabsTrigger value="cancelled">
+                Annulés (
+                {safeAllAppointments.filter(
+                  (apt) =>
+                    apt.status === "CANCELLED" || apt.status === "LATE_CANCELLED" || apt.status === "CLINIC_CANCELLED",
+                ).length}
+                )
+              </TabsTrigger>
+            </TabsList>
 
-              {/* Pagination */}
-              {appointmentsData && appointmentsData.totalPages > 1 && (
-                <PaginationControls currentPage={page} totalPages={appointmentsData.totalPages} onPageChange={setPage} />
+            <TabsContent value={activeTab} className="mt-6">
+              {tabAppointments.length === 0 ? (
+                <div className="text-center py-12">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold mb-2">Aucun rendez-vous trouvé</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {Object.values(filters).some(Boolean)
+                      ? "Aucun rendez-vous ne correspond aux filtres sélectionnés."
+                      : "Commencez par créer votre premier rendez-vous."}
+                  </p>
+                  {Object.values(filters).some(Boolean) ? (
+                    <Button variant="outline" onClick={handleResetFilters}>
+                      <Filter className="h-4 w-4 mr-2" />
+                      Réinitialiser les filtres
+                    </Button>
+                  ) : (
+                    <Button onClick={handleCreateNew}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Nouveau rendez-vous
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {tabAppointments.map((appointment) => (
+                    <AppointmentCard key={appointment.id} appointment={appointment} onEdit={handleEdit} />
+                  ))}
+                </div>
               )}
-            </>
-          )}
-        </div>
-      </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
 
       {/* Dialog Formulaire */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-4xl">
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingAppointment ? "Modifier le Rendez-vous" : "Nouveau Rendez-vous"}</DialogTitle>
+            <DialogTitle>{selectedAppointment ? "Modifier le rendez-vous" : "Nouveau rendez-vous"}</DialogTitle>
           </DialogHeader>
-          <AppointmentForm appointment={editingAppointment} onSuccess={handleFormSuccess} onCancel={handleFormCancel} />
+          <AppointmentForm
+            appointment={selectedAppointment}
+            onSuccess={handleFormSuccess}
+            onCancel={handleFormCancel}
+          />
         </DialogContent>
       </Dialog>
-
-      {/* Dialog Suppression */}
-      <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(undefined)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer le rendez-vous</AlertDialogTitle>
-            <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer ce rendez-vous ? Cette action est irréversible.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Dialog Annulation */}
-      <AlertDialog open={!!cancellingId} onOpenChange={() => setCancellingId(undefined)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Annuler le rendez-vous</AlertDialogTitle>
-            <AlertDialogDescription>Êtes-vous sûr de vouloir annuler ce rendez-vous ?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Non</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCancel}>Oui, annuler</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

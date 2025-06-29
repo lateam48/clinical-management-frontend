@@ -1,5 +1,6 @@
-import { AppointmentsList } from "@/components/modules/dashboard/secretary/appointments";
+"use client"
+import { AppointmentCalendar } from "@/components/modules/dashboard/secretary/appointments/AppointmentCalendar";
 
-export default function AppointmentsPage() {
-  return <AppointmentsList />
+export default function SecretaryAppointmentsPage() {
+  return <AppointmentCalendar />;
 }

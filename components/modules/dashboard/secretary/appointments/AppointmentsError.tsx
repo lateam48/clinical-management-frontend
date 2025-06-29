@@ -11,25 +11,28 @@ interface AppointmentsErrorProps {
 
 export function AppointmentsError({ error, onRetry }: Readonly<AppointmentsErrorProps>) {
   return (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-            <AlertTriangle className="h-6 w-6 text-destructive" />
-          </div>
-          <CardTitle>Erreur de chargement</CardTitle>
-          <CardDescription>Une erreur est survenue lors du chargement des rendez-vous</CardDescription>
-        </CardHeader>
-        <CardContent className="text-center space-y-4">
-          <p className="text-sm text-muted-foreground">{error.message || "Erreur inconnue"}</p>
-          {onRetry && (
-            <Button onClick={onRetry} variant="outline">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Réessayer
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+    <Card className="border-red-200 bg-red-50">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-red-700">
+          <AlertTriangle className="h-5 w-5" />
+          Erreur de chargement
+        </CardTitle>
+        <CardDescription className="text-red-600">
+          Une erreur s&apos;est produite lors du chargement des rendez-vous.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="p-3 bg-red-100 rounded-md">
+          <p className="text-sm text-red-800 font-mono">{error.message}</p>
+        </div>
+
+        {onRetry && (
+          <Button onClick={onRetry} variant="outline" className="w-full bg-transparent">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Réessayer
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   )
 }

@@ -1,7 +1,14 @@
+"use client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Calendar, FileText, MessageCircle } from "lucide-react"
+import { useTodayAppointments } from "@/hooks/useAppointments"
+import { useUserStore } from "@/stores/userStore"
 
 export function DoctorDashboard() {
+    const { user } = useUserStore();
+    const { data: todayAppointments, isLoading } = useTodayAppointments();
+    const doctorAppointments = todayAppointments?.filter(a => a.doctor === String(user?.id) && a.status === "SCHEDULED") ?? [];
+
     return (
         <div className="space-y-6">
             <div>
@@ -27,8 +34,8 @@ export function DoctorDashboard() {
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">18</div>
-                        <p className="text-xs text-muted-foreground">Aujourd{'’'}hui</p>
+                        <div className="text-2xl font-bold">{isLoading ? "..." : doctorAppointments.length}</div>
+                        <p className="text-xs text-muted-foreground">Aujourd&apos;hui</p>
                     </CardContent>
                 </Card>
 
