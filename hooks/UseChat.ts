@@ -154,6 +154,43 @@ export const useChat = () => {
     }
   })
 
+  // Delete message mutation
+  const deleteMessageMutation = useMutation({
+    mutationFn: async (messageId: number) => {
+      await chatService.deleteMessage(messageId)
+      return messageId
+    },
+    onSuccess: (messageId) => {
+      removeMessage(messageId)
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) })
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations })
+      toast.success('Message supprimé')
+    },
+    onError: (error) => {
+      toast.error('Erreur', {
+        description: 'Impossible de supprimer le message'
+      })
+    }
+  })
+
+  // Delete all messages mutation
+  const deleteAllMessagesMutation = useMutation({
+    mutationFn: async () => {
+      await chatService.deleteAllMessages()
+    },
+    onSuccess: () => {
+      clearMessages()
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) })
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations })
+      toast.success('Tous les messages ont été supprimés')
+    },
+    onError: (error) => {
+      toast.error('Erreur', {
+        description: 'Impossible de supprimer tous les messages'
+      })
+    }
+  })
+
   // Mark as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: async (conversationId: string) => {
@@ -203,18 +240,12 @@ export const useChat = () => {
   }, [addReactionMutation])
 
   const deleteMessage = useCallback((messageId: number) => {
-    // For now, just remove from local state
-    // TODO: Implement actual API call to delete message
-    removeMessage(messageId)
-    toast.success('Message supprimé')
-  }, [removeMessage])
+    deleteMessageMutation.mutate(messageId)
+  }, [deleteMessageMutation])
 
   const deleteAllMessages = useCallback(() => {
-    // For now, just clear local state
-    // TODO: Implement actual API call to delete all messages
-    clearMessages()
-    toast.success('Tous les messages ont été supprimés')
-  }, [clearMessages])
+    deleteAllMessagesMutation.mutate()
+  }, [deleteAllMessagesMutation])
 
   const markAsRead = useCallback((messageId: number) => {
     // For now, just update local state
@@ -258,6 +289,6 @@ export const useChat = () => {
     // Mutations state
     isSending: sendMessageMutation.isPending,
     isAddingReaction: addReactionMutation.isPending,
-    isDeletingAll: false // For now, always false since we don't have the actual mutation
+    isDeletingAll: deleteAllMessagesMutation.isPending
   }
 }
