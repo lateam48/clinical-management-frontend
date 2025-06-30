@@ -10,6 +10,7 @@ export function SecretaryDashboard() {
     const { getPatients } = usePatients();
     const { data: todayAppointments, isLoading } = useTodayAppointments();
 
+
     return (
         <div className="space-y-6">
             <div>
