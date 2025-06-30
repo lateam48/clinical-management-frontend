@@ -1,14 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { useHospitalInfo } from "@/hooks/useHospital"
+import { useHospital } from "@/hooks/useHospital"
 import { HospitalInfoHeader, HospitalInfoGrid, HospitalInfoLoading, HospitalInfoError, HospitalInfoForm  } from "@/components/modules/dashboard/admin/hospital"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 
 export function HospitalInfo() {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const { data: hospitalInfos, isLoading, error, refetch } = useHospitalInfo()
+  const { getHospitalInfo } = useHospital()
+  const { data: hospitalInfos, isLoading, error, refetch } = getHospitalInfo
 
   if (isLoading) {
     return <HospitalInfoLoading />

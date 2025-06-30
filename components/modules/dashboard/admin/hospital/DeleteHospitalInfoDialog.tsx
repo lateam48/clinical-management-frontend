@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import type { HospitalInfo } from "@/types/hospital"
-import { useDeleteHospitalInfo } from "@/hooks/useHospital"
+import { useHospital } from "@/hooks/useHospital"
 
 interface DeleteHospitalInfoDialogProps {
   open: boolean
@@ -20,7 +20,7 @@ interface DeleteHospitalInfoDialogProps {
 }
 
 export function DeleteHospitalInfoDialog({ open, onOpenChange, hospitalInfo }: DeleteHospitalInfoDialogProps) {
-  const deleteHospitalInfo = useDeleteHospitalInfo()
+  const { deleteHospitalInfo } = useHospital()
 
   const handleDelete = async () => {
       await deleteHospitalInfo.mutateAsync()

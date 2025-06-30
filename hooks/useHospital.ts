@@ -5,19 +5,15 @@ import { toast } from "sonner"
 import { HospitalCacheKeys } from "@/lib/const"
 import { ApiError } from "@/types"
 
-
-export function useHospitalInfo() {
-  return useQuery({
-    queryKey: [HospitalCacheKeys.Hospital],
-    queryFn: hospitalService.getAllHospitalInfo,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
-}
-
-export function useCreateHospitalInfo() {
+export const useHospital = () => {
   const queryClient = useQueryClient()
 
-  return useMutation({
+  const getHospitalInfo = useQuery({
+    queryKey: [HospitalCacheKeys.Hospital],
+    queryFn: hospitalService.getAllHospitalInfo,
+  })
+
+  const createHospitalInfo = useMutation({
     mutationFn: (data: CreateHospitalInfoRequest) => hospitalService.createHospitalInfo(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [HospitalCacheKeys.Hospital] })
@@ -27,12 +23,8 @@ export function useCreateHospitalInfo() {
       toast.error(error.response?.data?.message ?? "Échec de la création des informations de l'hôpital")
     },
   })
-}
 
-export function useUpdateHospitalInfo() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
+  const updateHospitalInfo = useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateHospitalInfoRequest }) =>
       hospitalService.updateHospitalInfo(id, data),
     onSuccess: () => {
@@ -43,12 +35,8 @@ export function useUpdateHospitalInfo() {
       toast.error(error.response?.data?.message ?? "Échec de la mise à jour des informations de l'hôpital")
     },
   })
-}
 
-export function useDeleteHospitalInfo() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
+  const deleteHospitalInfo = useMutation({
     mutationFn: () => hospitalService.deleteHospitalInfo(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [HospitalCacheKeys.Hospital] })
@@ -58,4 +46,11 @@ export function useDeleteHospitalInfo() {
       toast.error(error.response?.data?.message ?? "Échec de la suppression des informations de l'hôpital")
     },
   })
+
+  return {
+    getHospitalInfo,
+    createHospitalInfo,
+    updateHospitalInfo,
+    deleteHospitalInfo,
+  }
 }

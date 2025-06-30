@@ -22,7 +22,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Upload, X } from "lucide-react"
 import type { HospitalInfo } from "@/types/hospital"
-import { useCreateHospitalInfo, useUpdateHospitalInfo } from "@/hooks/useHospital"
+import { useHospital } from "@/hooks/useHospital"
 import { hospitalService } from "@/services/hospitalService"
 
 const hospitalInfoSchema = z.object({
@@ -41,7 +41,21 @@ interface HospitalInfoFormProps {
   mode: "create" | "edit"
 }
 
-const ALLOWED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/svg+xml"]
+// Enum pour les types de fichiers autorisés
+export enum AllowedFileType {
+  JPEG = "image/jpeg",
+  JPG = "image/jpg",
+  PNG = "image/png",
+  SVG = "image/svg+xml",
+}
+
+const ALLOWED_FILE_TYPES = [
+  AllowedFileType.JPEG,
+  AllowedFileType.JPG,
+  AllowedFileType.PNG,
+  AllowedFileType.SVG,
+]
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
 export function HospitalInfoForm({ open, onOpenChange, hospitalInfo, mode }: HospitalInfoFormProps) {
@@ -49,8 +63,7 @@ export function HospitalInfoForm({ open, onOpenChange, hospitalInfo, mode }: Hos
   const [previewUrl, setPreviewUrl] = useState<string>("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const createHospitalInfo = useCreateHospitalInfo()
-  const updateHospitalInfo = useUpdateHospitalInfo()
+  const { createHospitalInfo, updateHospitalInfo } = useHospital()
 
   const form = useForm<HospitalInfoFormData>({
     resolver: zodResolver(hospitalInfoSchema),
@@ -67,7 +80,7 @@ export function HospitalInfoForm({ open, onOpenChange, hospitalInfo, mode }: Hos
     if (!file) return
 
     // Validate file type
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+    if (!ALLOWED_FILE_TYPES.includes(file.type as AllowedFileType)) {
       toast.error("Format de fichier non autorisé. Utilisez JPG, PNG ou SVG.")
       return
     }
