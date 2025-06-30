@@ -138,7 +138,7 @@ export function AppointmentCard({ appointment, onEdit, readOnly }: Readonly<Appo
                             Annuler
                           </DropdownMenuItem>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="max-w-md w-full p-6">
                           <AlertDialogHeader>
                             <AlertDialogTitle>Annuler le rendez-vous</AlertDialogTitle>
                             <AlertDialogDescription>
@@ -161,7 +161,7 @@ export function AppointmentCard({ appointment, onEdit, readOnly }: Readonly<Appo
                         Supprimer
                       </DropdownMenuItem>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="max-w-md w-full p-6">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Supprimer le rendez-vous</AlertDialogTitle>
                         <AlertDialogDescription>

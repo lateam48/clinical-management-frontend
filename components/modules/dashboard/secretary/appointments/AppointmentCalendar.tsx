@@ -60,6 +60,7 @@ export function AppointmentCalendar() {
     show: boolean
   }>({ doctor: "", dateTime: "", show: false })
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
   // 2. Hooks (toujours AVANT tout return ou condition)
   const { data: appointments, isLoading, refetch } = useAllAppointments()
@@ -93,6 +94,15 @@ export function AppointmentCalendar() {
     NO_SHOW: { bg: "#6b7280", border: "#4b5563", text: "#ffffff" },
   } as const), [])
 
+  const statusLabels = {
+    SCHEDULED: "Programmé",
+    COMPLETED: "Terminé",
+    CANCELLED: "Annulé",
+    LATE_CANCELLED: "Annulé tardivement",
+    CLINIC_CANCELLED: "Annulé par la clinique",
+    NO_SHOW: "Absent",
+  } as const
+
   // Fonction pour obtenir le nom du médecin à partir de son ID
   /**
    * Retourne le nom complet du médecin à partir de son ID.
@@ -113,7 +123,15 @@ export function AppointmentCalendar() {
 
   // 4. Mémorisation des events (évite surcharge)
   const calendarEvents: CalendarEvent[] = useMemo(() =>
-    (appointments?.filter(a => !statusFilter || a.status === statusFilter) || []).map((appointment) => {
+    (appointments?.filter(a =>
+      (!statusFilter || a.status === statusFilter) &&
+      (!selectedDoctor || a.doctorId === selectedDoctor) &&
+      (!selectedRoom || a.room === selectedRoom) &&
+      (
+        !selectedDate ||
+        (new Date(a.dateTime).toDateString() === new Date(selectedDate).toDateString())
+      )
+    ) || []).map((appointment) => {
       const startDate = new Date(appointment.dateTime)
       const endDate = new Date(startDate.getTime() + 30 * 60000) // 30 minutes par défaut
       const colors = statusColors[appointment.status] || statusColors.SCHEDULED
@@ -136,7 +154,7 @@ export function AppointmentCalendar() {
         },
       }
     }) || [],
-    [appointments, statusColors, getDoctorName, statusFilter]
+    [appointments, statusColors, getDoctorName, statusFilter, selectedDoctor, selectedRoom, selectedDate]
   )
 
   // 5. Callbacks
@@ -209,6 +227,7 @@ export function AppointmentCalendar() {
   const resetFilters = useCallback((): void => {
     setSelectedDoctor("")
     setSelectedRoom("")
+    setSelectedDate(null)
   }, [])
 
   // Obtenir le nom du médecin sélectionné pour l'affichage
@@ -353,7 +372,7 @@ export function AppointmentCalendar() {
                 className={`text-xs ${statusFilter === status ? "ring-2 ring-primary" : ""}`}
                 onClick={() => setStatusFilter(statusFilter === status ? undefined : status)}
               >
-                {status.replace("_", " ")}
+                {statusLabels[status as keyof typeof statusLabels]}
               </Badge>
             ))}
           </div>
