@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { ChatInterface } from '@/components/modules/chat'
 import { useChat } from '@/hooks/UseChat'
 import { ChatParticipant } from '@/types/chat'
-import { UserRoles } from '@/types'
+import { webSocketService } from '@/services/WebSocketService' // Import the WebSocketService
 
 export default function SecretaryChatPage() {
   const { data: session } = useSession()
@@ -13,9 +13,21 @@ export default function SecretaryChatPage() {
   const [isClient, setIsClient] = useState(false)
 
   // Handle hydration
-  if (typeof window !== 'undefined' && !isClient) {
-    setIsClient(true)
-  }
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isClient) {
+      setIsClient(true)
+    }
+  }, [isClient])
+
+  // Connect to WebSocket when the component mounts
+  useEffect(() => {
+    webSocketService.connect()
+
+    // Disconnect from WebSocket when the component unmounts
+    return () => {
+      webSocketService.disconnect()
+    }
+  }, [])
 
   const {
     participants,
@@ -42,7 +54,11 @@ export default function SecretaryChatPage() {
 
   const handleSendMessage = (content: string) => {
     if (selectedParticipant) {
-      sendMessage(content)
+      webSocketService.sendMessage('/app/chat.private', {
+        sender: session?.user?.name || 'secretary',
+        recipient: selectedParticipant.name,
+        content,
+      })
     }
   }
 
@@ -140,4 +156,4 @@ export default function SecretaryChatPage() {
       />
     </div>
   )
-} 
+}

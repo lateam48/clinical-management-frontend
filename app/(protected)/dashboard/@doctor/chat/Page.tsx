@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { ChatInterface } from '@/components/modules/chat'
 import { useChat } from '@/hooks/UseChat'
 import { ChatParticipant } from '@/types/chat'
-import { UserRoles } from '@/types'
+import { webSocketService } from '@/services/WebSocketService' // Import the WebSocketService
 
 export default function DoctorChatPage() {
   const { data: session } = useSession()
@@ -18,6 +18,16 @@ export default function DoctorChatPage() {
     setIsClient(true)
     // Force re-render to clear any cached state
     setRenderKey(prev => prev + 1)
+  }, [])
+
+  // Connect to WebSocket when the component mounts
+  useEffect(() => {
+    webSocketService.connect()
+
+    // Disconnect from WebSocket when the component unmounts
+    return () => {
+      webSocketService.disconnect()
+    }
   }, [])
 
   const {
@@ -47,7 +57,11 @@ export default function DoctorChatPage() {
 
   const handleSendMessage = (content: string) => {
     if (selectedParticipant) {
-      sendMessage(content)
+      webSocketService.sendMessage('/app/chat.private', {
+        sender: session?.user?.name || 'doctor',
+        recipient: selectedParticipant.name,
+        content,
+      })
     }
   }
 
@@ -178,4 +192,4 @@ export default function DoctorChatPage() {
       </div>
     </div>
   )
-} 
+}
