@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { ChatInterface } from '@/components/modules/chat'
 import { useChat } from '@/hooks/UseChat'
 import { ChatParticipant } from '@/types/chat'
-import { UserRoles } from '@/types'
+import { webSocketService } from '@/services/WebSocketService' // Import the WebSocketService
 
 export default function DoctorChatPage() {
   const [selectedParticipant, setSelectedParticipant] = useState<ChatParticipant | null>(null)
@@ -14,6 +14,16 @@ export default function DoctorChatPage() {
   if (typeof window !== 'undefined' && !isClient) {
     setIsClient(true)
   }
+
+  // Connect to WebSocket when the component mounts
+  useEffect(() => {
+    webSocketService.connect()
+
+    // Disconnect from WebSocket when the component unmounts
+    return () => {
+      webSocketService.disconnect()
+    }
+  }, [])
 
   const {
     participants,
@@ -38,7 +48,11 @@ export default function DoctorChatPage() {
 
   const handleSendMessage = (content: string) => {
     if (selectedParticipant) {
-      sendMessage(content)
+      webSocketService.sendMessage('/app/chat.private', {
+        sender: session?.user?.name || 'doctor',
+        recipient: selectedParticipant.name,
+        content,
+      })
     }
   }
 
@@ -96,4 +110,4 @@ export default function DoctorChatPage() {
       participantRole="SECRETARY"
     />
   )
-} 
+}
