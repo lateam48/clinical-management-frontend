@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus, Building } from "lucide-react"
-import { HospitalInfoForm } from "./HospitalInfoForm"
+import { HospitalInfoForm } from "@/components/modules/dashboard/admin/hospital/HospitalInfoForm"
 
 interface HospitalInfoHeaderProps {
   totalCount: number

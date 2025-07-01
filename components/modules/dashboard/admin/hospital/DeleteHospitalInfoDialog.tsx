@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import type { HospitalInfo } from "@/types/hospital"
 import { useHospital } from "@/hooks/useHospital"
+import { toast } from "sonner"
 
 interface DeleteHospitalInfoDialogProps {
   open: boolean
@@ -23,9 +24,13 @@ export function DeleteHospitalInfoDialog({ open, onOpenChange, hospitalInfo }: D
   const { deleteHospitalInfo } = useHospital()
 
   const handleDelete = async () => {
+    try {
       await deleteHospitalInfo.mutateAsync()
       onOpenChange(false)
-
+      toast.success("Informations de l'hôpital supprimées avec succès !")
+    } catch {
+      toast.error("Échec de la suppression des informations de l'hôpital.")
+    }
   }
 
   return (

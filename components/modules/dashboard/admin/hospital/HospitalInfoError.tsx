@@ -11,7 +11,7 @@ interface HospitalInfoErrorProps {
 
 export function HospitalInfoError({ error, onRetry }: HospitalInfoErrorProps) {
   return (
-    <div className="flex items-center justify-center py-12">
+    <div className="flex items-center justify-center py-12" role="alert" aria-live="assertive">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
