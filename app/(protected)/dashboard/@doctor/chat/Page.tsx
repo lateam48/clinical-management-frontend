@@ -48,8 +48,6 @@ export default function DoctorChatPage() {
   } = useChat()
 
   const handleSelectParticipant = (participant: ChatParticipant) => {
-    console.log('=== SELECTING PARTICIPANT ===')
-    console.log('Selected participant:', participant)
     setSelectedParticipant(participant)
     // Mark messages as read when selecting a participant
     markAsRead(participant.id)
@@ -83,15 +81,6 @@ export default function DoctorChatPage() {
 
   // Get current user ID from session
   const currentUserId = 2 // Temporary fix: Force doctor ID to 2 to match database
-
-  // Debug: Log session and currentUserId
-  console.log('=== DOCTOR CHAT DEBUG ===')
-  console.log('Doctor Chat - Current User ID:', currentUserId)
-  console.log('Doctor Chat - Session User ID:', session?.user?.id)
-  console.log('Doctor Chat - Session User:', session?.user)
-  console.log('Doctor Chat - Render Key:', renderKey)
-  console.log('Doctor Chat - Is Client:', isClient)
-  console.log('========================')
 
   if (isLoading) {
     return (
@@ -127,49 +116,6 @@ export default function DoctorChatPage() {
 
   return (
     <div className="h-screen max-h-screen flex flex-col" key={`doctor-chat-${renderKey}`}>
-      {/* Debug Section */}
-      <div className="p-4 bg-red-100 border border-red-300 rounded-lg flex-shrink-0 mb-4">
-        <h3 className="font-bold mb-2 text-red-800">🚨 CRITICAL DEBUG INFO:</h3>
-        <div className="text-sm space-y-1 text-red-700">
-          <div><strong>Current User ID:</strong> {currentUserId}</div>
-          <div><strong>Render Key:</strong> {renderKey}</div>
-          <div><strong>Is Client:</strong> {isClient ? 'Yes' : 'No'}</div>
-          <div><strong>Messages Count:</strong> {messages.length}</div>
-          <div><strong>Selected Participant:</strong> {selectedParticipant?.name || 'None'} (ID: {selectedParticipant?.id || 'None'})</div>
-          <div><strong>Available Participants:</strong> {participants.length}</div>
-          <div><strong>Raw Messages:</strong></div>
-          <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-32">
-            {JSON.stringify(messages.map(m => ({ id: m.id, senderId: m.senderId, content: m.content.substring(0, 30) })), null, 2)}
-          </pre>
-          
-          {/* Temporary test buttons */}
-          <div className="mt-4 space-y-2">
-            <h4 className="font-semibold">🧪 TEST BUTTONS:</h4>
-            <button 
-              onClick={() => {
-                const firstSecretary = participants.find(p => p.role === 'SECRETARY')
-                if (firstSecretary) {
-                  console.log('Force selecting first secretary:', firstSecretary)
-                  handleSelectParticipant(firstSecretary)
-                }
-              }}
-              className="px-3 py-1 bg-blue-500 text-white rounded text-xs"
-            >
-              Force Select First Secretary
-            </button>
-            <button 
-              onClick={() => {
-                console.log('Current participants:', participants)
-                console.log('Current messages:', messages)
-              }}
-              className="px-3 py-1 bg-green-500 text-white rounded text-xs ml-2"
-            >
-              Log All Data
-            </button>
-          </div>
-        </div>
-      </div>
-
       <div className="flex-1 min-h-0">
         <ChatInterface
           participants={participants}
