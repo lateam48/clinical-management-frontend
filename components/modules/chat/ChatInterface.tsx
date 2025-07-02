@@ -1,30 +1,30 @@
 'use client'
 
-import { useState } from 'react'
-import { Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { ParticipantList } from './ParticipantList'
-import { ChatArea } from './ChatArea'
-import { ChatMessage, ChatParticipant } from '@/types/chat'
+import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ParticipantList } from './ParticipantList';
+import { ChatArea } from './ChatArea';
+import { ChatMessage, ChatParticipant } from '@/types/chat';
 
 interface ChatInterfaceProps {
-  participants: ChatParticipant[]
-  messages: ChatMessage[]
-  selectedParticipant: ChatParticipant | null
-  onSelectParticipant: (participant: ChatParticipant) => void
-  onSendMessage: (content: string) => void
-  onAddReaction: (messageId: number, emoji: string) => void
-  onDeleteMessage?: (messageId: number) => void
-  onDeleteAllMessages?: () => void
-  onMarkAsRead?: (senderId: number) => void
-  isSending?: boolean
-  isDeletingAll?: boolean
-  isMarkingAsRead?: boolean
-  currentUserId?: number
-  unreadCount?: number | { total: number; byConversation: Record<string, number> }
-  title: string
-  participantRole: 'DOCTOR' | 'SECRETARY'
+  participants: ChatParticipant[];
+  messages: ChatMessage[];
+  selectedParticipant: ChatParticipant | null;
+  onSelectParticipant: (participant: ChatParticipant) => void;
+  onSendMessage: (content: string) => void;
+  onAddReaction: (messageId: number, emoji: string) => void;
+  onDeleteMessage?: (messageId: number) => void;
+  onDeleteAllMessages?: () => void;
+  onMarkAsRead?: (senderId: number) => void;
+  isSending?: boolean;
+  isDeletingAll?: boolean;
+  isMarkingAsRead?: boolean;
+  currentUserId?: number;
+  unreadCount?: number | { total: number; byConversation: Record<string, number> };
+  title: string;
+  participantRole: 'DOCTOR' | 'SECRETARY';
 }
 
 export function ChatInterface({
@@ -43,29 +43,29 @@ export function ChatInterface({
   currentUserId,
   unreadCount = 0,
   title,
-  participantRole
+  participantRole,
 }: ChatInterfaceProps) {
-  const [isClient, setIsClient] = useState(false)
+  const [isClient, setIsClient] = useState(false);
 
   // Handle hydration
   if (typeof window !== 'undefined' && !isClient) {
-    setIsClient(true)
+    setIsClient(true);
   }
 
   // Filter participants by role
-  const availableParticipants = participants.filter(participant => participant.role === participantRole)
+  const availableParticipants = participants.filter(participant => participant.role === participantRole);
 
   const getParticipantTitle = () => {
-    return participantRole === 'SECRETARY' ? 'Secrétaires' : 'Docteurs'
-  }
+    return participantRole === 'SECRETARY' ? 'Secrétaires' : 'Docteurs';
+  };
 
   const getParticipantPlaceholder = () => {
-    return participantRole === 'SECRETARY' ? 'Sélectionner un secrétaire' : 'Sélectionner un docteur'
-  }
+    return participantRole === 'SECRETARY' ? 'Sélectionner un secrétaire' : 'Sélectionner un docteur';
+  };
 
   const getParticipantEmptyMessage = () => {
-    return participantRole === 'SECRETARY' ? 'Aucun secrétaire disponible' : 'Aucun docteur disponible'
-  }
+    return participantRole === 'SECRETARY' ? 'Aucun secrétaire disponible' : 'Aucun docteur disponible';
+  };
 
   return (
     <div className="space-y-6 h-full flex flex-col">
@@ -78,8 +78,8 @@ export function ChatInterface({
         <div className="flex items-center gap-2">
           <Badge variant="secondary">
             {(() => {
-              const count = typeof unreadCount === 'object' ? unreadCount.total : (unreadCount || 0)
-              return `${count} message${count > 1 ? 's' : ''} non lu${count > 1 ? 's' : ''}`
+              const count = typeof unreadCount === 'object' ? unreadCount.total : (unreadCount || 0);
+              return `${count} message${count > 1 ? 's' : ''} non lu${count > 1 ? 's' : ''}`;
             })()}
           </Badge>
           {onDeleteAllMessages && (
@@ -117,7 +117,7 @@ export function ChatInterface({
             onSendMessage={onSendMessage}
             onAddReaction={onAddReaction}
             onDeleteMessage={onDeleteMessage}
-            onMarkAsRead={onMarkAsRead}
+            onMarkAsRead={onMarkAsRead} 
             isSending={isSending}
             isMarkingAsRead={isMarkingAsRead}
             currentUserId={currentUserId}
@@ -126,5 +126,5 @@ export function ChatInterface({
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

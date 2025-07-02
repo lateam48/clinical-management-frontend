@@ -135,10 +135,10 @@ class ChatService {
   // Mark messages as read
   async markAsRead(senderId: string): Promise<void> {
     try {
-      await apiClient.put(`${this.baseUrl}/chat/read/${senderId}`)
+      await apiClient.put(`${this.baseUrl}/chat/read/${senderId}`);
     } catch (error) {
-      console.error('Error marking as read:', error)
-      throw error
+      console.error('Error marking as read:', error);
+      throw error;
     }
   }
 

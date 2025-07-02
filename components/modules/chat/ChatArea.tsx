@@ -1,25 +1,25 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
-import { MessageCircle, CheckCheck } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { MessageBubble } from './MessageBubble'
-import { MessageInput } from './MessageInput'
-import { ChatMessage, ChatParticipant } from '@/types/chat'
+import { useRef, useEffect } from 'react';
+import { MessageCircle, CheckCheck } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { MessageBubble } from './MessageBubble';
+import { MessageInput } from './MessageInput';
+import { ChatMessage, ChatParticipant } from '@/types/chat';
 
 interface ChatAreaProps {
-  messages: ChatMessage[]
-  selectedParticipant: ChatParticipant | null
-  onSendMessage: (content: string) => void
-  onAddReaction: (messageId: number, emoji: string) => void
-  onDeleteMessage?: (messageId: number) => void
-  onMarkAsRead?: (senderId: number) => void
-  isSending?: boolean
-  isMarkingAsRead?: boolean
-  currentUserId?: number
-  unreadCount?: number | { total: number; byConversation: Record<string, number> }
+  messages: ChatMessage[];
+  selectedParticipant: ChatParticipant | null;
+  onSendMessage: (content: string) => void;
+  onAddReaction: (messageId: number, emoji: string) => void;
+  onDeleteMessage?: (messageId: number) => void;
+  onMarkAsRead?: (senderId: number) => void;
+  isSending?: boolean;
+  isMarkingAsRead?: boolean;
+  currentUserId?: number;
+  unreadCount?: number | { total: number; byConversation: Record<string, number> };
 }
 
 export function ChatArea({
@@ -32,19 +32,19 @@ export function ChatArea({
   isSending = false,
   isMarkingAsRead = false,
   currentUserId,
-  unreadCount = 0
+  unreadCount = 0,
 }: ChatAreaProps) {
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-  const isOwnMessage = (message: ChatMessage) => message.senderId === currentUserId
+  const isOwnMessage = (message: ChatMessage) => message.senderId === currentUserId;
 
   // Extract the count value from unreadCount
-  const count = typeof unreadCount === 'object' ? unreadCount.total : (unreadCount || 0)
+  const count = typeof unreadCount === 'object' ? unreadCount.total : unreadCount || 0;
 
   return (
     <Card className="flex flex-col h-full">
@@ -80,7 +80,7 @@ export function ChatArea({
           </div>
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent className="flex-1 flex flex-col p-0">
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-3">
@@ -122,5 +122,5 @@ export function ChatArea({
         )}
       </CardContent>
     </Card>
-  )
-} 
+  );
+}

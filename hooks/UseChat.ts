@@ -1,13 +1,13 @@
-import { useEffect, useCallback, useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { chatService } from '@/services/chatService'
-import { useChatStore } from '@/stores/ChtatStore'
-import { toast } from 'sonner'
+import { useEffect, useCallback, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { chatService } from '@/services/chatService';
+import { useChatStore } from '@/stores/ChtatStore';
+import { toast } from 'sonner';
 
 export const useChat = () => {
-  const queryClient = useQueryClient()
-  const [isClient, setIsClient] = useState(false)
-  
+  const queryClient = useQueryClient();
+  const [isClient, setIsClient] = useState(false);
+
   const {
     conversations,
     currentConversation,
@@ -30,125 +30,141 @@ export const useChat = () => {
     addReactionToMessage,
     removeMessage,
     clearMessages,
-    updateParticipantStatus
-  } = useChatStore()
+    updateParticipantStatus,
+  } = useChatStore();
 
   // Fix hydration issue
   useEffect(() => {
-    setIsClient(true)
-  }, [])
+    setIsClient(true);
+  }, []);
 
   // Query Keys
   const CHAT_KEYS = {
     conversations: ['chat', 'conversations'],
     participants: ['chat', 'participants'],
     messages: (conversationId?: string) => ['chat', 'messages', conversationId],
-    unreadCount: ['chat', 'unread-count']
-  }
+    unreadCount: ['chat', 'unread-count'],
+  };
 
   // Fetch conversations
   const conversationsQuery = useQuery({
     queryKey: CHAT_KEYS.conversations,
     queryFn: async () => {
-      const data = await chatService.getConversations()
-      setConversations(data)
-      return data
+      const data = await chatService.getConversations();
+      setConversations(data);
+      return data;
     },
     onSettled: (data, error) => {
       if (error) {
-        setError(error.message)
+        setError(error.message);
         toast.error('Erreur', {
-          description: 'Impossible de charger les conversations'
-        })
+          description: 'Impossible de charger les conversations',
+        });
       }
-    }
-  })
+    },
+  });
 
   // Fetch participants
   const participantsQuery = useQuery({
     queryKey: CHAT_KEYS.participants,
     queryFn: async () => {
-      const data = await chatService.getParticipants()
-      setParticipants(data)
-      return data
+      const data = await chatService.getParticipants();
+      setParticipants(data);
+      return data;
     },
     onSettled: (data, error) => {
       if (error) {
-        setError(error.message)
+        setError(error.message);
         toast.error('Erreur', {
-          description: 'Impossible de charger les participants'
-        })
+          description: 'Impossible de charger les participants',
+        });
       }
-    }
-  })
+    },
+  });
 
   // Fetch messages for a specific conversation
   const messagesQuery = useQuery({
     queryKey: CHAT_KEYS.messages(currentConversation?.id),
     queryFn: async () => {
-      const data = await chatService.getMessages()
-      setMessages(data)
-      return data
+      const data = await chatService.getMessages();
+      setMessages(data);
+      return data;
     },
     enabled: isClient,
     onSettled: (data, error) => {
       if (error) {
-        setError(error.message)
+        setError(error.message);
         toast.error('Erreur', {
-          description: 'Impossible de charger les messages'
-        })
+          description: 'Impossible de charger les messages',
+        });
       }
-    }
-  })
+    },
+  });
 
   // Fetch unread count
   const unreadCountQuery = useQuery({
     queryKey: CHAT_KEYS.unreadCount,
     queryFn: async () => {
-      const data = await chatService.getUnreadCount()
-      setUnreadCount(data.total)
-      return data
+      const data = await chatService.getUnreadCount();
+      setUnreadCount(data.total);
+      return data;
     },
     enabled: isClient,
     onSettled: (data, error) => {
       if (error) {
-        setError(error.message)
+        setError(error.message);
       }
-    }
-  })
+    },
+  });
 
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
       if (!currentConversation?.id) {
-        throw new Error('Aucune conversation sélectionnée')
+        throw new Error('Aucune conversation sélectionnée');
       }
-      
-      // For virtual conversations, use the participant's original name
-      const recipientName = currentConversation.id.startsWith('virtual-') 
-        ? currentConversation.participants[0]?.originalName || currentConversation.participants[0]?.name || ''
-        : currentConversation.id
-        
-      return await chatService.sendMessage(recipientName, content)
+
+      // Debug: afficher les informations de la conversation
+      console.log('Current conversation:', currentConversation);
+      console.log('Participants:', currentConversation.participants);
+
+      // Pour les conversations virtuelles, utiliser le premier participant
+      let recipientName = '';
+      if (currentConversation.id.startsWith('virtual-')) {
+        recipientName = currentConversation.participants[0]?.originalName || currentConversation.participants[0]?.name || '';
+      } else {
+        // Pour les conversations existantes, utiliser le nom du destinataire
+        // On suppose que le premier participant est le destinataire
+        recipientName = currentConversation.participants[0]?.originalName || currentConversation.participants[0]?.name || '';
+      }
+
+      console.log('Recipient name:', recipientName);
+
+      if (!recipientName) {
+        throw new Error('Impossible de déterminer le destinataire');
+      }
+
+      return await chatService.sendMessage(recipientName, content);
     },
     onSuccess: (newMessage) => {
-      addMessage(newMessage)
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations })
+      addMessage(newMessage);
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations });
       // Don't invalidate unread count since we don't want to increment it for own messages
-      toast.success('Message envoyé')
+      toast.success('Message envoyé');
     },
     onError: (error) => {
+      console.error('Error sending message:', error);
       toast.error('Erreur', {
-        description: 'Impossible d\'envoyer le message'
-      })
-    }
-  })
+        description: "Impossible d'envoyer le message",
+      });
+    },
+  });
 
   // Add reaction mutation
   const addReactionMutation = useMutation({
     mutationFn: async ({ messageId, emoji }: { messageId: number; emoji: string }) => {
-      await chatService.addReaction(messageId, emoji)
-      return { messageId, emoji }
+      await chatService.addReaction(messageId, emoji);
+      return { messageId, emoji };
     },
     onSuccess: ({ messageId, emoji }) => {
       const newReaction = {
@@ -156,101 +172,101 @@ export const useChat = () => {
         emoji,
         userId: 1, // TODO: Get from session
         userName: 'User', // TODO: Get from session
-        timestamp: new Date().toISOString()
-      }
-      addReactionToMessage(messageId, newReaction)
-      toast.success('Réaction ajoutée')
+        timestamp: new Date().toISOString(),
+      };
+      addReactionToMessage(messageId, newReaction);
+      toast.success('Réaction ajoutée');
     },
     onError: (error) => {
       toast.error('Erreur', {
-        description: 'Impossible d\'ajouter la réaction'
-      })
-    }
-  })
+        description: "Impossible d'ajouter la réaction",
+      });
+    },
+  });
 
   // Delete message mutation
   const deleteMessageMutation = useMutation({
     mutationFn: async (messageId: number) => {
-      await chatService.deleteMessage(messageId)
-      return messageId
+      await chatService.deleteMessage(messageId);
+      return messageId;
     },
     onSuccess: (messageId) => {
-      removeMessage(messageId)
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) })
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations })
-      toast.success('Message supprimé')
+      removeMessage(messageId);
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) });
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations });
+      toast.success('Message supprimé');
     },
     onError: (error) => {
       toast.error('Erreur', {
-        description: 'Impossible de supprimer le message'
-      })
-    }
-  })
+        description: 'Impossible de supprimer le message',
+      });
+    },
+  });
 
   // Delete all messages mutation
   const deleteAllMessagesMutation = useMutation({
     mutationFn: async () => {
-      await chatService.deleteAllMessages()
+      await chatService.deleteAllMessages();
     },
     onSuccess: () => {
-      clearMessages()
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) })
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations })
-      toast.success('Tous les messages ont été supprimés')
+      clearMessages();
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) });
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations });
+      toast.success('Tous les messages ont été supprimés');
     },
     onError: (error) => {
       toast.error('Erreur', {
-        description: 'Impossible de supprimer tous les messages'
-      })
-    }
-  })
+        description: 'Impossible de supprimer tous les messages',
+      });
+    },
+  });
 
   // Mark as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: async (conversationId: string) => {
-      await chatService.markAsRead(conversationId)
+      await chatService.markAsRead(conversationId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount })
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) })
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount });
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) });
     },
     onError: (error) => {
       toast.error('Erreur', {
-        description: 'Impossible de marquer comme lu'
-      })
-    }
-  })
+        description: 'Impossible de marquer comme lu',
+      });
+    },
+  });
 
   // Mark as read by sender mutation
   const markAsReadBySenderMutation = useMutation({
     mutationFn: async (senderId: number) => {
-      await chatService.markAsRead(senderId.toString())
+      await chatService.markAsRead(senderId.toString());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount })
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) })
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations })
-      toast.success('Messages marqués comme lus')
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount });
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) });
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations });
+      toast.success('Messages marqués comme lus');
     },
     onError: (error) => {
       toast.error('Erreur', {
         description: 'Impossible de marquer les messages comme lus'
-      })
-    }
-  })
+      });
+    },
+  });
 
   // Actions
   const selectParticipant = useCallback((participant: any) => {
-    setSelectedParticipant(participant)
+    setSelectedParticipant(participant);
     // Find or create conversation with this participant
-    const existingConversation = conversations.find(conv => 
-      conv.participants.some(p => p.id === participant.id)
-    )
-    
+    const existingConversation = conversations.find((conv) =>
+      conv.participants.some((p) => p.id === participant.id)
+    );
+
     if (existingConversation) {
-      setCurrentConversation(existingConversation)
+      setCurrentConversation(existingConversation);
       if (existingConversation.id) {
-        markAsReadMutation.mutate(existingConversation.id)
+        markAsReadMutation.mutate(existingConversation.id);
       }
     } else {
       // Create a virtual conversation for new participants
@@ -260,54 +276,54 @@ export const useChat = () => {
         lastMessage: undefined,
         unreadCount: 0,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-      setCurrentConversation(virtualConversation)
-      toast.info(`Nouvelle conversation avec ${participant.name}`)
+        updatedAt: new Date().toISOString(),
+      };
+      setCurrentConversation(virtualConversation);
+      toast.info(`Nouvelle conversation avec ${participant.name}`);
     }
-  }, [setSelectedParticipant, conversations, setCurrentConversation, markAsReadMutation])
+  }, [setSelectedParticipant, conversations, setCurrentConversation, markAsReadMutation]);
 
   const sendMessage = useCallback((content: string) => {
     if (!currentConversation) {
-      toast.error('Aucune conversation sélectionnée')
-      return
+      toast.error('Aucune conversation sélectionnée');
+      return;
     }
-    
-    sendMessageMutation.mutate(content)
-  }, [currentConversation, sendMessageMutation])
+
+    sendMessageMutation.mutate(content);
+  }, [currentConversation, sendMessageMutation]);
 
   const addReaction = useCallback((messageId: number, emoji: string) => {
-    addReactionMutation.mutate({ messageId, emoji })
-  }, [addReactionMutation])
+    addReactionMutation.mutate({ messageId, emoji });
+  }, [addReactionMutation]);
 
   const deleteMessage = useCallback((messageId: number) => {
-    deleteMessageMutation.mutate(messageId)
-  }, [deleteMessageMutation])
+    deleteMessageMutation.mutate(messageId);
+  }, [deleteMessageMutation]);
 
   const deleteAllMessages = useCallback(() => {
-    deleteAllMessagesMutation.mutate()
-  }, [deleteAllMessagesMutation])
+    deleteAllMessagesMutation.mutate();
+  }, [deleteAllMessagesMutation]);
 
   const markAsRead = useCallback((messageId: number) => {
     // For now, just update local state
     // TODO: Implement actual API call to mark message as read
-    markMessageAsRead(messageId)
-  }, [markMessageAsRead])
+    markMessageAsRead(messageId);
+  }, [markMessageAsRead]);
 
   const markAsReadBySender = useCallback((senderId: number) => {
-    markAsReadBySenderMutation.mutate(senderId)
-  }, [markAsReadBySenderMutation])
+    markAsReadBySenderMutation.mutate(senderId);
+  }, [markAsReadBySenderMutation]);
 
   // Auto-refresh unread count
   useEffect(() => {
-    if (!isClient) return
-    
-    const interval = setInterval(() => {
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount })
-    }, 30000) // Refresh every 30 seconds
+    if (!isClient) return;
 
-    return () => clearInterval(interval)
-  }, [queryClient, isClient])
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount });
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [queryClient, isClient]);
 
   return {
     // State
@@ -330,12 +346,12 @@ export const useChat = () => {
     markAsRead,
     markMessageAsRead,
     updateParticipantStatus,
-    markAsReadBySender,
+    markAsReadBySender, // Include this function here
 
     // Mutations state
     isSending: sendMessageMutation.isPending,
     isAddingReaction: addReactionMutation.isPending,
     isDeletingAll: deleteAllMessagesMutation.isPending,
-    isMarkingAsRead: markAsReadBySenderMutation.isPending
-  }
-}
+    isMarkingAsRead: markAsReadBySenderMutation.isPending,
+  };
+};
