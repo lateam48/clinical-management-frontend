@@ -10,6 +10,7 @@ import {
   Stethoscope,
   MessageCircle,
   Receipt,
+  Building,
 } from "lucide-react"
 
 export interface NavigationItem {
@@ -62,6 +63,12 @@ export const navigationConfig: NavigationItem[] = [
     title: "Statistiques",
     href: "/dashboard/statistics",
     icon: BarChart3,
+    roles: [UserRoles.ADMIN],
+  },
+  {
+    title: "Informations Hôpital",
+    href: "/dashboard/hospital",
+    icon: Building,
     roles: [UserRoles.ADMIN],
   },
   {
