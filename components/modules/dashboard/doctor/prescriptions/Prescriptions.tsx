@@ -18,13 +18,8 @@ export function Prescriptions() {
   const { getStaff } = useStaff({ role: 'DOCTOR' })
 
   // Extraction des données et états
-  const patients = getPatients.data
-  const patientsLoading = getPatients.isLoading
-  const patientsError = getPatients.error
-  
-  const doctors = getStaff.data
-  const doctorsLoading = getStaff.isLoading
-  const doctorsError = getStaff.error
+  const {data : patients, isLoading: patientsLoading, error: patientsError} = getPatients
+  const {data : doctors, isLoading: doctorsLoading, error: doctorsError} = getStaff
 
   // États de chargement et d'erreur combinés
   const isLoading = prescriptionsLoading ?? patientsLoading ?? doctorsLoading
@@ -61,7 +56,7 @@ export function Prescriptions() {
   }
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-6 relative w-full">
       <PrescriptionsHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}

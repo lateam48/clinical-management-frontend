@@ -1,7 +1,7 @@
 "use client"
 
 import { usePatients, usePatient } from '@/hooks/usePatients';
-import { PatientRequestData, PatientResponseData } from '@/types/patient';
+import { PatientRequestData, PatientResponseData, Gender } from '@/types/patient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -91,69 +91,75 @@ export function PatientManagement() {
         {getPatients.isLoading ? (
           <Skeleton className="h-32 w-full" />
         ) : (
-          filteredPatients && filteredPatients.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[140px] px-4">Nom</TableHead>
-                  <TableHead className="min-w-[140px] px-4">Prénom</TableHead>
-                  <TableHead className="min-w-[160px] px-4">Date de naissance</TableHead>
-                  <TableHead className="min-w-[100px] px-4">Sexe</TableHead>
-                  <TableHead className="min-w-[140px] px-4">Téléphone</TableHead>
-                  <TableHead className="min-w-[180px] px-4">Email</TableHead>
-                  <TableHead className="w-12 px-2 text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPatients.map((patient: PatientResponseData) => (
-                  <TableRow key={patient.id}
-                    onClick={e => {
-                      if ((e.target as HTMLElement).closest('[data-actions-cell]')) return;
-                      setViewPatient(patient);
-                    }}
-                    className="cursor-pointer hover:bg-muted/70 transition-colors"
-                  >
-                    <TableCell className="px-4">{patient.lastName}</TableCell>
-                    <TableCell className="px-4">{patient.firstName}</TableCell>
-                    <TableCell className="px-4">{patient.dateOfBirth}</TableCell>
-                    <TableCell className="px-4">{patient.gender === 'MALE' ? 'Homme' : 'Femme'}</TableCell>
-                    <TableCell className="px-4">{patient.phoneNumber}</TableCell>
-                    <TableCell className="px-4">{patient.email}</TableCell>
-                    <TableCell className="px-2 text-center" data-actions-cell>
-                      <DropdownMenu>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-5 w-5" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                          </TooltipTrigger>
-                          <TooltipContent side="left">Actions</TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={e => { e.stopPropagation(); handleEdit(patient); }}>
-                            Modifier
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={e => { e.stopPropagation(); handleDelete(patient.id); }} variant="destructive">
-                            Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="py-12">
-              <EmptyState
-                icon={SearchX}
-                title="Aucun patient trouvé"
-                description="Aucun patient ne correspond à votre recherche."
-              />
-            </div>
-          )
+          (() => {
+            if (filteredPatients && filteredPatients.length > 0) {
+              return (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[140px] px-4">Nom</TableHead>
+                      <TableHead className="min-w-[140px] px-4">Prénom</TableHead>
+                      <TableHead className="min-w-[160px] px-4">Date de naissance</TableHead>
+                      <TableHead className="min-w-[100px] px-4">Sexe</TableHead>
+                      <TableHead className="min-w-[140px] px-4">Téléphone</TableHead>
+                      <TableHead className="min-w-[180px] px-4">Email</TableHead>
+                      <TableHead className="w-12 px-2 text-center">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredPatients.map((patient: PatientResponseData) => (
+                      <TableRow key={patient.id}
+                        onClick={e => {
+                          if ((e.target as HTMLElement).closest('[data-actions-cell]')) return;
+                          setViewPatient(patient);
+                        }}
+                        className="cursor-pointer hover:bg-muted/70 transition-colors"
+                      >
+                        <TableCell className="px-4">{patient.lastName}</TableCell>
+                        <TableCell className="px-4">{patient.firstName}</TableCell>
+                        <TableCell className="px-4">{patient.dateOfBirth}</TableCell>
+                        <TableCell className="px-4">{patient.gender === Gender.MALE ? 'Homme' : 'Femme'}</TableCell>
+                        <TableCell className="px-4">{patient.phoneNumber}</TableCell>
+                        <TableCell className="px-4">{patient.email}</TableCell>
+                        <TableCell className="px-2 text-center" data-actions-cell>
+                          <DropdownMenu>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                                    <MoreHorizontal className="h-5 w-5" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                              </TooltipTrigger>
+                              <TooltipContent side="left">Actions</TooltipContent>
+                            </Tooltip>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={e => { e.stopPropagation(); handleEdit(patient); }}>
+                                Modifier
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={e => { e.stopPropagation(); handleDelete(patient.id); }} variant="destructive">
+                                Supprimer
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              );
+            } else {
+              return (
+                <div className="py-12">
+                  <EmptyState
+                    icon={SearchX}
+                    title="Aucun patient trouvé"
+                    description="Aucun patient ne correspond à votre recherche."
+                  />
+                </div>
+              );
+            }
+          })()
         )}
       </CardContent>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -194,7 +200,7 @@ export function PatientManagement() {
                 </div>
                 <div>
                   <span className="font-semibold text-muted-foreground">Sexe :</span>
-                  <span className="ml-2">{viewPatient.gender === 'MALE' ? 'Homme' : 'Femme'}</span>
+                  <span className="ml-2">{viewPatient.gender === Gender.MALE ? 'Homme' : 'Femme'}</span>
                 </div>
               </div>
               <div className="space-y-2">
