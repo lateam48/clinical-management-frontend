@@ -9,6 +9,13 @@ export const PatientsCacheKeys = Object.freeze({
   Patients: 'patients'
 })
 
+export const InvoicesCacheKeys = Object.freeze({
+  Invoices: 'invoices',
+  Paid: 'paid',
+  Unpaid: 'unpaid',
+  TotalPaid: 'totalPaid',
+})
+
 export const PrescriptionsCacheKeys = Object.freeze({
     Prescriptions: 'prescriptions'
 })

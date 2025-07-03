@@ -2,12 +2,11 @@
 
 import React from "react";
 import { z } from "zod";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PatientRequestData, Gender } from '@/types/patient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { DialogFooter } from '@/components/ui/dialog';
 import {
   Select,
@@ -18,7 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { SubmitButton } from '@/components/global/submit-button';
-import { cn } from '@/lib/utils';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 
 const patientSchema = z.object({
   firstName: z.string().min(1, "Le prénom est requis").min(2, "Le prénom doit contenir au moins 2 caractères"),
@@ -33,7 +32,7 @@ const patientSchema = z.object({
   address: z.string().min(1, "L'adresse est requise").min(5, "L'adresse doit contenir au moins 5 caractères"),
   phoneNumber: z.string()
     .min(1, "Le téléphone est requis")
-    .regex(/^(\+33|0)[1-9](\d{8})$/, "Format de téléphone invalide (ex: 0612345678 ou +33123456789)"),
+    .regex(/^(6[0-9]{8}|\+2376[0-9]{8})$/, "Format de téléphone camerounais invalide (ex: 6XXXXXXXX ou +2376XXXXXXXX)"),
   email: z.string()
     .min(1, "L'email est requis")
     .email("Format d'email invalide")
@@ -50,17 +49,9 @@ type PatientFormProps = {
 };
 
 export function PatientForm({ initialData, onSubmit, onError, loading }: PatientFormProps) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting, isValid, isDirty },
-    reset,
-    control,
-    setFocus,
-    clearErrors,
-  } = useForm<PatientRequestData>({
+  const form = useForm<PatientRequestData>({
     resolver: zodResolver(patientSchema),
-    mode: "onBlur", // Validation en temps réel lors de la perte de focus
+    mode: "onBlur",
     defaultValues: {
       ...initialData,
       medicalHistory: initialData?.medicalHistory ?? "",
@@ -68,20 +59,19 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
     },
   });
 
-  // Reset form when initialData changes (for edit mode)
   React.useEffect(() => {
-    reset(initialData || {});
-  }, [initialData, reset]);
+    form.reset(initialData || {});
+  }, [initialData, form.reset]);
 
   // Focus sur le premier champ en erreur
   React.useEffect(() => {
-    if (Object.keys(errors).length > 0) {
-      const firstErrorField = Object.keys(errors)[0] as keyof PatientRequestData;
-      setFocus(firstErrorField);
+    if (Object.keys(form.formState.errors).length > 0) {
+      const firstErrorField = Object.keys(form.formState.errors)[0] as keyof PatientRequestData;
+      form.setFocus(firstErrorField);
     }
-  }, [errors, setFocus]);
+  }, [form.formState.errors, form.setFocus]);
 
-  const handleFormSubmit = handleSubmit(
+  const handleFormSubmit = form.handleSubmit(
     (data: PatientRequestData) => {
       onSubmit(data);
     },
@@ -91,229 +81,155 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
     }
   );
 
-  const getFieldError = (fieldName: keyof PatientRequestData) => {
-    return errors[fieldName]?.message;
-  };
-
-  const isFieldError = (fieldName: keyof PatientRequestData) => {
-    return !!errors[fieldName];
-  };
+  const isLoading = loading || form.formState.isSubmitting;
 
   return (
-    <form onSubmit={handleFormSubmit} className="space-y-6">
-      <div className="grid grid-cols-2 gap-6">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="firstName">Prénom *</Label>
-          <Input 
-            id="firstName" 
-            className={cn(
-              "bg-white border",
-              isFieldError("firstName") 
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            )}
-            {...register("firstName")}
-            onFocus={() => clearErrors("firstName")}
-          />
-          {getFieldError("firstName") && (
-            <span className="text-xs text-red-500 flex items-center gap-1">
-              <span>⚠</span>
-              {getFieldError("firstName")}
-            </span>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="lastName">Nom *</Label>
-          <Input 
-            id="lastName" 
-            className={cn(
-              "bg-white border",
-              isFieldError("lastName") 
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            )}
-            {...register("lastName")}
-            onFocus={() => clearErrors("lastName")}
-          />
-          {getFieldError("lastName") && (
-            <span className="text-xs text-red-500 flex items-center gap-1">
-              <span>⚠</span>
-              {getFieldError("lastName")}
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-6">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="dateOfBirth">Date de naissance *</Label>
-          <Input 
-            id="dateOfBirth" 
-            type="date" 
-            className={cn(
-              "bg-white border",
-              isFieldError("dateOfBirth") 
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            )}
-            {...register("dateOfBirth")}
-            onFocus={() => clearErrors("dateOfBirth")}
-          />
-          {getFieldError("dateOfBirth") && (
-            <span className="text-xs text-red-500 flex items-center gap-1">
-              <span>⚠</span>
-              {getFieldError("dateOfBirth")}
-            </span>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="gender">Sexe *</Label>
-          <Controller
-            name="gender"
-            control={control}
+    <Form {...form}>
+      <form onSubmit={handleFormSubmit} className="space-y-6">
+        <div className="grid grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="firstName"
             render={({ field }) => (
-              <Select
-                value={field.value || ''}
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  clearErrors("gender");
-                }}
-              >
-                <SelectTrigger 
-                  id="gender" 
-                  className={cn(
-                    "w-full bg-white border",
-                    isFieldError("gender") 
-                      ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
-                      : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  )}
-                >
-                  <SelectValue placeholder="Sélectionner" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MALE">Homme</SelectItem>
-                  <SelectItem value="FEMALE">Femme</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormItem>
+                <FormLabel>Prénom *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Prénom du patient" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
-          {getFieldError("gender") && (
-            <span className="text-xs text-red-500 flex items-center gap-1">
-              <span>⚠</span>
-              {getFieldError("gender")}
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-6">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="address">Adresse *</Label>
-          <Input 
-            id="address" 
-            className={cn(
-              "bg-white border",
-              isFieldError("address") 
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nom *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Nom du patient" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-            {...register("address")}
-            onFocus={() => clearErrors("address")}
           />
-          {getFieldError("address") && (
-            <span className="text-xs text-red-500 flex items-center gap-1">
-              <span>⚠</span>
-              {getFieldError("address")}
-            </span>
-          )}
         </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="phoneNumber">Téléphone *</Label>
-          <Input 
-            id="phoneNumber" 
-            className={cn(
-              "bg-white border",
-              isFieldError("phoneNumber") 
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+        <div className="grid grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="dateOfBirth"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date de naissance *</FormLabel>
+                <FormControl>
+                  <Input type="date" placeholder="Date de naissance" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-            placeholder="0612345678"
-            {...register("phoneNumber")}
-            onFocus={() => clearErrors("phoneNumber")}
           />
-          {getFieldError("phoneNumber") && (
-            <span className="text-xs text-red-500 flex items-center gap-1">
-              <span>⚠</span>
-              {getFieldError("phoneNumber")}
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-6">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="email">Email *</Label>
-          <Input 
-            id="email" 
-            type="email" 
-            className={cn(
-              "bg-white border",
-              isFieldError("email") 
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
-                : "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+          <FormField
+            control={form.control}
+            name="gender"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sexe *</FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value || ''}
+                    onValueChange={field.onChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner le sexe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MALE">Homme</SelectItem>
+                      <SelectItem value="FEMALE">Femme</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-            placeholder="exemple@email.com"
-            {...register("email")}
-            onFocus={() => clearErrors("email")}
           />
-          {getFieldError("email") && (
-            <span className="text-xs text-red-500 flex items-center gap-1">
-              <span>⚠</span>
-              {getFieldError("email")}
-            </span>
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Adresse *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Adresse du patient" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="phoneNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Téléphone *</FormLabel>
+                <FormControl>
+                  <Input placeholder="6XXXXXXXX ou +2376XXXXXXXX" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email *</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="exemple@email.com" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="medicalHistory"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Antécédents médicaux</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Antécédents médicaux du patient..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <FormField
+          control={form.control}
+          name="allergies"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Allergies</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Allergies connues du patient..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="medicalHistory">Antécédents médicaux</Label>
-          <Textarea 
-            id="medicalHistory" 
-            className="h-24 bg-white border border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
-            placeholder="Antécédents médicaux du patient..."
-            {...register("medicalHistory")}
-          />
-        </div>
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="allergies">Allergies</Label>
-        <Textarea 
-          id="allergies" 
-          className="h-24 bg-white border border-gray-300 focus:border-blue-500 focus:ring-blue-500" 
-          placeholder="Allergies connues du patient..."
-          {...register("allergies")}
         />
-      </div>
-      
-      {/* Résumé des erreurs */}
-      {Object.keys(errors).length > 0 && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-700 font-medium mb-2">
-            Veuillez corriger les erreurs suivantes :
-          </p>
-          <ul className="text-xs text-red-600 space-y-1">
-            {Object.entries(errors).map(([field, error]) => (
-              <li key={field} className="flex items-center gap-1">
-                <span>•</span>
-                {error?.message}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <DialogFooter>
-        <SubmitButton 
-          loading={loading || isSubmitting} 
-          label={loading || isSubmitting ? 'Enregistrement...' : 'Enregistrer'} 
-          disabled={!isValid || !isDirty}
-        />
-      </DialogFooter>
-    </form>
+        <DialogFooter>
+          <SubmitButton 
+            loading={isLoading} 
+            label={isLoading ? 'Enregistrement...' : 'Enregistrer'} 
+            disabled={!form.formState.isValid || isLoading}
+          />
+        </DialogFooter>
+      </form>
+    </Form>
   );
 } 
