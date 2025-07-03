@@ -67,3 +67,32 @@ export interface CalendarView {
   type: "dayGridMonth" | "timeGridWeek" | "timeGridDay" | "listWeek"
   title: string
 }
+
+export enum AppointmentStatus {
+  SCHEDULED = "SCHEDULED",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+  LATE_CANCELLED = "LATE_CANCELLED",
+  CLINIC_CANCELLED = "CLINIC_CANCELLED",
+  NO_SHOW = "NO_SHOW",
+}
+
+export const AppointmentStatusLabels: Record<AppointmentStatus, string> = {
+  [AppointmentStatus.SCHEDULED]: "Programmé",
+  [AppointmentStatus.COMPLETED]: "Terminé",
+  [AppointmentStatus.CANCELLED]: "Annulé",
+  [AppointmentStatus.LATE_CANCELLED]: "Annulé tardivement",
+  [AppointmentStatus.CLINIC_CANCELLED]: "Annulé par la clinique",
+  [AppointmentStatus.NO_SHOW]: "Absent",
+};
+
+export const AppointmentStatusColors: Record<AppointmentStatus, string> = {
+  [AppointmentStatus.SCHEDULED]: "bg-blue-100 text-blue-800 border-blue-200",
+  [AppointmentStatus.COMPLETED]: "bg-green-100 text-green-800 border-green-200",
+  [AppointmentStatus.CANCELLED]: "bg-red-100 text-red-800 border-red-200",
+  [AppointmentStatus.LATE_CANCELLED]: "bg-orange-100 text-orange-800 border-orange-200",
+  [AppointmentStatus.CLINIC_CANCELLED]: "bg-purple-100 text-purple-800 border-purple-200",
+  [AppointmentStatus.NO_SHOW]: "bg-gray-100 text-gray-800 border-gray-200",
+};
+
+export const DOCTOR_FILTER_ALL = "all"

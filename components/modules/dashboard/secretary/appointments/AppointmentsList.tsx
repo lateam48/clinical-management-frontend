@@ -26,11 +26,6 @@ export function AppointmentsList() {
   const { data: allAppointments, isLoading, error, refetch } = useAllAppointments()
   const { data: filteredAppointments } = useFilteredAppointments(filters)
 
-  // Debug : vérifier la structure des données
-  console.log("allAppointments:", allAppointments)
-  console.log("Type of allAppointments:", typeof allAppointments)
-  console.log("Is array:", Array.isArray(allAppointments))
-
   // Fonction utilitaire pour s'assurer qu'on a un tableau
   const ensureArray = (
     data: AppointmentResponseDTO[] | { data?: AppointmentResponseDTO[]; appointments?: AppointmentResponseDTO[]; content?: AppointmentResponseDTO[] } | undefined

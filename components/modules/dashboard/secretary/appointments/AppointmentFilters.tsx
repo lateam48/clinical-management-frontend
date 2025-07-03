@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils"
 
 import { useStaff } from "@/hooks/useUsers"
 import type { AppointmentFilters } from "@/types/appointment"
+import { DOCTOR_FILTER_ALL } from "@/types/appointment"
+import { EmptyState } from "@/components/global/empty-state"
 
 interface AppointmentFiltersProps {
   filters: AppointmentFilters
@@ -43,7 +45,7 @@ export function AppointmentFiltersComponent({ filters, onFiltersChange, onSearch
   const handleDoctorChange = (doctor: string) => {
     onFiltersChange({
       ...filters,
-      doctor: doctor === "all" ? undefined : doctor,
+      doctor: doctor === DOCTOR_FILTER_ALL ? undefined : doctor,
     })
   }
 
@@ -77,12 +79,12 @@ export function AppointmentFiltersComponent({ filters, onFiltersChange, onSearch
             <User className="h-4 w-4" />
             Médecin
           </label>
-          <Select value={filters.doctor ?? "all"} onValueChange={handleDoctorChange}>
+          <Select value={filters.doctor ?? DOCTOR_FILTER_ALL} onValueChange={handleDoctorChange}>
             <SelectTrigger>
               <SelectValue placeholder={doctorsLoading ? "Chargement..." : "Tous les médecins"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous les médecins</SelectItem>
+              <SelectItem value={DOCTOR_FILTER_ALL}>Tous les médecins</SelectItem>
               {doctors && doctors.length > 0 ? (
                 doctors.map((doctor) => (
                   <SelectItem key={doctor.id} value={`${doctor.firstName} ${doctor.lastName}`}>
@@ -93,9 +95,7 @@ export function AppointmentFiltersComponent({ filters, onFiltersChange, onSearch
                   </SelectItem>
                 ))
               ) : (
-                <div className="p-2 text-sm text-muted-foreground">
-                  {doctorsLoading ? "Chargement des médecins..." : "Aucun médecin disponible"}
-                </div>
+                <EmptyState icon={Calendar} title="Aucun médecin" description={doctorsLoading ? "Chargement des médecins..." : "Aucun médecin disponible"} />
               )}
             </SelectContent>
           </Select>
@@ -161,7 +161,7 @@ export function AppointmentFiltersComponent({ filters, onFiltersChange, onSearch
                   {filters.doctor}
                   <X
                     className="h-3 w-3 cursor-pointer hover:text-destructive"
-                    onClick={() => handleDoctorChange("all")}
+                    onClick={() => handleDoctorChange(DOCTOR_FILTER_ALL)}
                   />
                 </Badge>
               )}

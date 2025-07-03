@@ -12,30 +12,13 @@ import { Separator } from "@/components/ui/separator"
 import { useDeleteAppointment, useCancelAppointment, useMarkAsCompleted } from "@/hooks/useAppointments"
 import { useStaffMember } from "@/hooks/useUsers"
 import type { AppointmentResponseDTO } from "@/types/appointment"
+import { AppointmentStatus, AppointmentStatusLabels, AppointmentStatusColors } from "@/types/appointment"
 
 interface AppointmentDetailsProps {
   appointment: AppointmentResponseDTO
   onEdit: () => void
   onClose: () => void
 }
-
-const statusLabels = {
-  SCHEDULED: "Programmé",
-  COMPLETED: "Terminé",
-  CANCELLED: "Annulé",
-  LATE_CANCELLED: "Annulé tardivement",
-  CLINIC_CANCELLED: "Annulé par la clinique",
-  NO_SHOW: "Absent",
-} as const
-
-const statusColors = {
-  SCHEDULED: "bg-blue-100 text-blue-800",
-  COMPLETED: "bg-green-100 text-green-800",
-  CANCELLED: "bg-red-100 text-red-800",
-  LATE_CANCELLED: "bg-orange-100 text-orange-800",
-  CLINIC_CANCELLED: "bg-purple-100 text-purple-800",
-  NO_SHOW: "bg-gray-100 text-gray-800",
-} as const
 
 export function AppointmentDetails({ appointment, onEdit, onClose }: Readonly<AppointmentDetailsProps>) {
   const deleteAppointment = useDeleteAppointment()
@@ -90,7 +73,7 @@ export function AppointmentDetails({ appointment, onEdit, onClose }: Readonly<Ap
             </p>
           </div>
         </div>
-        <Badge className={`px-4 py-1 text-base rounded-full font-semibold shadow ${statusColors[appointment.status]}`}>{statusLabels[appointment.status]}</Badge>
+        <Badge className={`px-4 py-1 text-base rounded-full font-semibold shadow ${AppointmentStatusColors[appointment.status as AppointmentStatus]}`}>{AppointmentStatusLabels[appointment.status as AppointmentStatus]}</Badge>
       </div>
 
       <Separator />

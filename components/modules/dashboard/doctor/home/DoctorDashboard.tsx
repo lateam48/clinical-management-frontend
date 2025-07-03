@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Calendar, FileText, MessageCircle } from "lucide-react"
 import { useTodayAppointments } from "@/hooks/useAppointments"
 import { useUserStore } from "@/stores/userStore"
+import { AppointmentStatus } from "@/types/appointment"
 
 export function DoctorDashboard() {
     const { user } = useUserStore();
     const { data: todayAppointments, isLoading } = useTodayAppointments();
-    const doctorAppointments = todayAppointments?.filter(a => a.doctor === String(user?.id) && a.status === "SCHEDULED") ?? [];
+    const doctorAppointments = todayAppointments?.filter(a => a.doctor === String(user?.id) && a.status === AppointmentStatus.SCHEDULED) ?? [];
 
     return (
         <div className="space-y-6">

@@ -2,17 +2,21 @@
 
 import { useAllAppointments } from "@/hooks/useAppointments";
 import { AppointmentCard } from "@/components/modules/dashboard/secretary/appointments/AppointmentCard";
+import { AppointmentStatus } from "@/types/appointment"
+import { EmptyState } from "@/components/global/empty-state"
+import { LoadingContent } from "@/components/global/loading-content"
+import { Calendar } from "lucide-react"
 
 export default function AdminAppointmentsPage() {
   const { data: appointments, isLoading } = useAllAppointments();
 
-  if (isLoading) return <div>Chargement...</div>;
+  if (isLoading) return <LoadingContent />;
 
   // Filtrage par statut
-  const scheduled = appointments?.filter(a => a.status === "SCHEDULED") || [];
-  const completed = appointments?.filter(a => a.status === "COMPLETED") || [];
+  const scheduled = appointments?.filter(a => a.status === AppointmentStatus.SCHEDULED as string) || [];
+  const completed = appointments?.filter(a => a.status === AppointmentStatus.COMPLETED as string) || [];
   const cancelled = appointments?.filter(a =>
-    ["CANCELLED", "LATE_CANCELLED", "CLINIC_CANCELLED"].includes(a.status)
+    [AppointmentStatus.CANCELLED as string, AppointmentStatus.LATE_CANCELLED as string, AppointmentStatus.CLINIC_CANCELLED as string].includes(a.status)
   ) || [];
 
   return (
@@ -26,7 +30,7 @@ export default function AdminAppointmentsPage() {
             <AppointmentCard key={appointment.id} appointment={appointment} readOnly />
           ))
         ) : (
-          <div className="text-muted-foreground">Aucun rendez-vous programmé.</div>
+          <EmptyState icon={Calendar} title="Aucun rendez-vous programmé" description="Aucun rendez-vous n'est programmé pour le moment." />
         )}
       </div>
 
@@ -37,7 +41,7 @@ export default function AdminAppointmentsPage() {
             <AppointmentCard key={appointment.id} appointment={appointment} readOnly />
           ))
         ) : (
-          <div className="text-muted-foreground">Aucun rendez-vous terminé.</div>
+          <EmptyState icon={Calendar} title="Aucun rendez-vous terminé" description="Aucun rendez-vous terminé pour le moment." />
         )}
       </div>
 
@@ -48,7 +52,7 @@ export default function AdminAppointmentsPage() {
             <AppointmentCard key={appointment.id} appointment={appointment} readOnly />
           ))
         ) : (
-          <div className="text-muted-foreground">Aucun rendez-vous annulé.</div>
+          <EmptyState icon={Calendar} title="Aucun rendez-vous annulé" description="Aucun rendez-vous annulé pour le moment." />
         )}
       </div>
     </div>

@@ -30,30 +30,13 @@ import {
 import { useDeleteAppointment, useCancelAppointment, useMarkAsCompleted } from "@/hooks/useAppointments"
 import { useStaff } from "@/hooks/useUsers"
 import type { AppointmentResponseDTO } from "@/types/appointment"
+import { AppointmentStatus, AppointmentStatusLabels, AppointmentStatusColors } from "@/types/appointment"
 
 interface AppointmentCardProps {
   appointment: AppointmentResponseDTO
   onEdit?: (appointment: AppointmentResponseDTO) => void
   readOnly?: boolean
 }
-
-const statusLabels = {
-  SCHEDULED: "Programmé",
-  COMPLETED: "Terminé",
-  CANCELLED: "Annulé",
-  LATE_CANCELLED: "Annulé tardivement",
-  CLINIC_CANCELLED: "Annulé par la clinique",
-  NO_SHOW: "Absent",
-} as const
-
-const statusColors = {
-  SCHEDULED: "bg-blue-100 text-blue-800 border-blue-200",
-  COMPLETED: "bg-green-100 text-green-800 border-green-200",
-  CANCELLED: "bg-red-100 text-red-800 border-red-200",
-  LATE_CANCELLED: "bg-orange-100 text-orange-800 border-orange-200",
-  CLINIC_CANCELLED: "bg-purple-100 text-purple-800 border-purple-200",
-  NO_SHOW: "bg-gray-100 text-gray-800 border-gray-200",
-} as const
 
 export function AppointmentCard({ appointment, onEdit, readOnly }: Readonly<AppointmentCardProps>) {
   const deleteAppointment = useDeleteAppointment()
@@ -107,7 +90,7 @@ export function AppointmentCard({ appointment, onEdit, readOnly }: Readonly<Appo
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge className={statusColors[appointment.status]}>{statusLabels[appointment.status]}</Badge>
+            <Badge className={AppointmentStatusColors[appointment.status as AppointmentStatus]}>{AppointmentStatusLabels[appointment.status as AppointmentStatus]}</Badge>
             {!readOnly && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
