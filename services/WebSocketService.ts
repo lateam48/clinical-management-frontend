@@ -5,7 +5,7 @@ class WebSocketService {
 
   constructor() {
     this.client = new Client({
-      brokerURL: 'ws://localhost:8888/ws', // Your WebSocket endpoint
+      brokerURL: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8888/ws',
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
