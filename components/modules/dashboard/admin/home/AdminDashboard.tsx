@@ -31,7 +31,7 @@ export function AdminDashboard() {
                        paidDate.getFullYear() === currentYear;
             })
             .reduce((total, invoice) => total + invoice.amount, 0);
-    }, [getPaidInvoices.data]);
+    }, [getPaidInvoices.data]
 
     return (
         <div className="space-y-6">
@@ -81,7 +81,7 @@ export function AdminDashboard() {
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">320</div>
+                        <div className="text-2xl font-bold">{isLoading ? "..." : monthAppointments.length}</div>
                         <p className="text-xs text-muted-foreground">+15% ce mois</p>
                     </CardContent>
                 </Card>
