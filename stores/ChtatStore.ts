@@ -11,6 +11,7 @@ interface ChatState {
   isLoading: boolean
   error: string | null
   unreadCount: number
+  currentUserId: number | null
 
   // Actions
   setConversations: (conversations: ChatRoom[]) => void
@@ -22,6 +23,7 @@ interface ChatState {
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   setUnreadCount: (count: number) => void
+  setCurrentUserId: (userId: number) => void
   markMessageAsRead: (messageId: number) => void
   addReactionToMessage: (messageId: number, reaction: any) => void
   removeMessage: (messageId: number) => void
@@ -39,6 +41,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isLoading: false,
   error: null,
   unreadCount: 0,
+  currentUserId: null,
 
   // Actions
   setConversations: (conversations) => set({ conversations }),
@@ -49,8 +52,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
   
   addMessage: (message) => set((state) => {
     // Don't increment unread count for messages sent by the current user
-    // We can determine this by checking if the message is not read and the sender is not the current user
-    const shouldIncrementUnread = !message.isRead && message.senderId !== 2 // TODO: Get current user ID dynamically
+    // Only check if currentUserId is set, otherwise don't increment unread count
+    const shouldIncrementUnread = !message.isRead && 
+      state.currentUserId !== null && 
+      message.senderId !== state.currentUserId
     
     return {
       messages: [...state.messages, message],
@@ -67,6 +72,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setError: (error) => set({ error }),
   
   setUnreadCount: (unreadCount) => set({ unreadCount }),
+  
+  setCurrentUserId: (currentUserId) => set({ currentUserId }),
   
   markMessageAsRead: (messageId) => {
     set((state) => ({
