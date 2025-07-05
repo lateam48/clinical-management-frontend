@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
+import { EmptyState } from '@/components/global/empty-state';
 import { ChatMessage, ChatParticipant } from '@/types/chat';
 
 interface ChatAreaProps {
@@ -20,6 +21,7 @@ interface ChatAreaProps {
   isMarkingAsRead?: boolean;
   currentUserId?: number;
   unreadCount?: number | { total: number; byConversation: Record<string, number> };
+  reverseDisplay?: boolean;
 }
 
 export function ChatArea({
@@ -33,6 +35,7 @@ export function ChatArea({
   isMarkingAsRead = false,
   currentUserId,
   unreadCount = 0,
+  reverseDisplay = false,
 }: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -85,15 +88,17 @@ export function ChatArea({
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-3">
           {!selectedParticipant ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Sélectionnez un participant pour voir les messages</p>
-            </div>
+            <EmptyState
+              icon={MessageCircle}
+              title="Aucun participant sélectionné"
+              description="Sélectionnez un participant pour voir les messages"
+            />
           ) : messages.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Aucun message dans cette conversation</p>
-              <p className="text-sm">Commencez à discuter !</p>
-            </div>
+            <EmptyState
+              icon={MessageCircle}
+              title="Aucun message"
+              description="Aucun message dans cette conversation. Commencez à discuter !"
+            />
           ) : (
             <>
               {messages.map((message) => (
@@ -104,6 +109,7 @@ export function ChatArea({
                   onAddReaction={onAddReaction}
                   onDeleteMessage={onDeleteMessage}
                   currentUserId={currentUserId}
+                  reverseDisplay={reverseDisplay}
                 />
               ))}
               <div ref={messagesEndRef} />

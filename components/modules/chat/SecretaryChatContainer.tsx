@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { ChatInterface } from '@/components/modules/chat'
+import { ChatInterface } from '@/components/modules/chat/ChatInterface'
 import { useChat } from '@/hooks/UseChat'
 import { ChatParticipant } from '@/types/chat'
 import { webSocketService } from '@/services/WebSocketService'

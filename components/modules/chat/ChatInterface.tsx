@@ -25,6 +25,7 @@ interface ChatInterfaceProps {
   unreadCount?: number | { total: number; byConversation: Record<string, number> };
   title: string;
   participantRole: 'DOCTOR' | 'SECRETARY';
+  reverseDisplay?: boolean;
 }
 
 export function ChatInterface({
@@ -44,6 +45,7 @@ export function ChatInterface({
   unreadCount = 0,
   title,
   participantRole,
+  reverseDisplay = false,
 }: ChatInterfaceProps) {
   const [isClient, setIsClient] = useState(false);
 
@@ -122,6 +124,7 @@ export function ChatInterface({
             isMarkingAsRead={isMarkingAsRead}
             currentUserId={currentUserId}
             unreadCount={unreadCount}
+            reverseDisplay={reverseDisplay}
           />
         </div>
       </div>

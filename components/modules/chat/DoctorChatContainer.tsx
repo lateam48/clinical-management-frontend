@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { ChatInterface } from '@/components/modules/chat'
+import { ChatInterface } from '@/components/modules/chat/ChatInterface'
 import { useChat } from '@/hooks/UseChat'
 import { ChatParticipant } from '@/types/chat'
 import { webSocketService } from '@/services/WebSocketService'
@@ -78,7 +78,7 @@ export function DoctorChatContainer() {
     markAsReadBySender(senderId)
   }
 
-  const currentUserId = 2
+  const currentUserId = session?.user?.id ? parseInt(session.user.id as string) : null
 
   if (isLoading) {
     return <LoadingContent icon={MessageCircle} loadingText="Chargement du chat..." className="h-64" />
@@ -125,6 +125,7 @@ export function DoctorChatContainer() {
           unreadCount={unreadCount}
           title="Chat - Docteur"
           participantRole="SECRETARY"
+          reverseDisplay={true}
         />
       </div>
     </div>
