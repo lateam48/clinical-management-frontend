@@ -91,6 +91,8 @@ export const useChat = () => {
       return data;
     },
     enabled: isClient,
+    refetchInterval: 3000, // Poll every 3 seconds for new messages
+    refetchIntervalInBackground: true,
     onSettled: (data, error) => {
       if (error) {
         setError(error.message);
@@ -110,6 +112,8 @@ export const useChat = () => {
       return data;
     },
     enabled: isClient,
+    refetchInterval: 5000, // Poll every 5 seconds for unread count
+    refetchIntervalInBackground: true,
     onSettled: (data, error) => {
       if (error) {
         setError(error.message);
@@ -149,6 +153,7 @@ export const useChat = () => {
     onSuccess: (newMessage) => {
       addMessage(newMessage);
       queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations });
+      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages() });
       // Don't invalidate unread count since we don't want to increment it for own messages
       toast.success('Message envoyé');
     },

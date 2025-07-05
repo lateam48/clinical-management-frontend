@@ -34,12 +34,6 @@ export function MessageBubble({
   const { data: session } = useSession()
   const [isClient, setIsClient] = useState(false)
 
-  // Debug logs
-  console.log('MessageBubble - message.senderId:', message.senderId)
-  console.log('MessageBubble - currentUserId:', currentUserId)
-  console.log('MessageBubble - isOwnMessage:', isOwnMessage)
-  console.log('MessageBubble - message.senderName:', message.senderName)
-
   // Handle hydration
   if (typeof window !== 'undefined' && !isClient) {
     setIsClient(true)

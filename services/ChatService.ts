@@ -97,11 +97,11 @@ class ChatService {
   }
 
   // Send a message
-  async sendMessage(conversationId: string, content: string): Promise<ChatMessage> {
+  async sendMessage(recipientName: string, content: string): Promise<ChatMessage> {
     try {
       const response = await apiClient.post(`${this.baseUrl}/chat`, {
         content,
-        recipientName: conversationId // Using conversationId as recipientName for now
+        recipientName
       })
       // API returns the created message directly
       return response.data
