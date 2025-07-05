@@ -6,6 +6,8 @@ import { ChatInterface } from '@/components/modules/chat'
 import { useChat } from '@/hooks/UseChat'
 import { ChatParticipant } from '@/types/chat'
 import { webSocketService } from '@/services/WebSocketService'
+import { LoadingContent } from '@/components/global/loading-content'
+import { MessageCircle } from 'lucide-react'
 
 export function SecretaryChatContainer() {
   const { data: session } = useSession()
@@ -80,14 +82,7 @@ export function SecretaryChatContainer() {
   const currentUserId = session?.user?.id ? parseInt(session.user.id as string) : null
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2" />
-          <p>Chargement du chat...</p>
-        </div>
-      </div>
-    )
+    return <LoadingContent icon={MessageCircle} loadingText="Chargement du chat..." className="h-64" />
   }
 
   if (error) {
