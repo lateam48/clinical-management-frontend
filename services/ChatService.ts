@@ -1,13 +1,13 @@
 import { apiClient } from '@/lib/axios'
 import { ChatParticipant, ChatConversation, ChatMessage, UnreadCount } from '@/types/chat'
 
-class ChatService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api/v1'
+function createChatService() {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8888/api/v1'
 
   // Get all participants (users that can chat)
-  async getParticipants(): Promise<ChatParticipant[]> {
+  const getParticipants = async (): Promise<ChatParticipant[]> => {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/chat/participants`)
+      const response = await apiClient.get(`${baseUrl}/chat/participants`)
       // API returns array directly: [{ "fullName": "secretary" }]
       const data = response.data || []
       
@@ -28,9 +28,9 @@ class ChatService {
   }
 
   // Get all conversations for the current user
-  async getConversations(): Promise<ChatConversation[]> {
+  const getConversations = async (): Promise<ChatConversation[]> => {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/chat/conversations`)
+      const response = await apiClient.get(`${baseUrl}/chat/conversations`)
       // API returns array of messages directly
       const messages = response.data || []
       
@@ -84,9 +84,9 @@ class ChatService {
   }
 
   // Get all messages
-  async getMessages(conversationId?: string): Promise<ChatMessage[]> {
+  const getMessages = async (conversationId?: string): Promise<ChatMessage[]> => {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/chat`)
+      const response = await apiClient.get(`${baseUrl}/chat`)
       // API returns array directly
       const data = response.data || []
       return data
@@ -97,9 +97,9 @@ class ChatService {
   }
 
   // Send a message
-  async sendMessage(recipientName: string, content: string): Promise<ChatMessage> {
+  const sendMessage = async (recipientName: string, content: string): Promise<ChatMessage> => {
     try {
-      const response = await apiClient.post(`${this.baseUrl}/chat`, {
+      const response = await apiClient.post(`${baseUrl}/chat`, {
         content,
         recipientName
       })
@@ -112,9 +112,9 @@ class ChatService {
   }
 
   // Get unread message count
-  async getUnreadCount(): Promise<UnreadCount> {
+  const getUnreadCount = async (): Promise<UnreadCount> => {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/chat/unread/count`)
+      const response = await apiClient.get(`${baseUrl}/chat/unread/count`)
       // API returns number directly
       const count = response.data || 0
       
@@ -133,9 +133,9 @@ class ChatService {
   }
 
   // Mark messages as read
-  async markAsRead(senderId: string): Promise<void> {
+  const markAsRead = async (senderId: string): Promise<void> => {
     try {
-      await apiClient.put(`${this.baseUrl}/chat/read/${senderId}`);
+      await apiClient.put(`${baseUrl}/chat/read/${senderId}`);
     } catch (error) {
       console.error('Error marking as read:', error);
       throw error;
@@ -143,9 +143,9 @@ class ChatService {
   }
 
   // Add reaction to a message
-  async addReaction(messageId: number, reaction: string): Promise<void> {
+  const addReaction = async (messageId: number, reaction: string): Promise<void> => {
     try {
-      await apiClient.post(`${this.baseUrl}/chat/message/${messageId}/react?reaction=${reaction}`)
+      await apiClient.post(`${baseUrl}/chat/message/${messageId}/react?reaction=${reaction}`)
     } catch (error) {
       console.error('Error adding reaction:', error)
       throw error
@@ -153,9 +153,9 @@ class ChatService {
   }
 
   // Remove reaction from a message
-  async removeReaction(messageId: number, reaction: string): Promise<void> {
+  const removeReaction = async (messageId: number, reaction: string): Promise<void> => {
     try {
-      await apiClient.delete(`${this.baseUrl}/chat/message/${messageId}/react?reaction=${reaction}`)
+      await apiClient.delete(`${baseUrl}/chat/message/${messageId}/react?reaction=${reaction}`)
     } catch (error) {
       console.error('Error removing reaction:', error)
       throw error
@@ -163,9 +163,9 @@ class ChatService {
   }
 
   // Delete a message
-  async deleteMessage(messageId: number): Promise<void> {
+  const deleteMessage = async (messageId: number): Promise<void> => {
     try {
-      await apiClient.delete(`${this.baseUrl}/chat/message/${messageId}`)
+      await apiClient.delete(`${baseUrl}/chat/message/${messageId}`)
     } catch (error) {
       console.error('Error deleting message:', error)
       throw error
@@ -173,15 +173,27 @@ class ChatService {
   }
 
   // Delete all messages
-  async deleteAllMessages(): Promise<void> {
+  const deleteAllMessages = async (): Promise<void> => {
     try {
-      await apiClient.delete(`${this.baseUrl}/chat/all`)
+      await apiClient.delete(`${baseUrl}/chat/all`)
     } catch (error) {
       console.error('Error deleting all messages:', error)
       throw error
     }
   }
+
+  return {
+    getParticipants,
+    getConversations,
+    getMessages,
+    sendMessage,
+    getUnreadCount,
+    markAsRead,
+    addReaction,
+    removeReaction,
+    deleteMessage,
+    deleteAllMessages
+  }
 }
 
-
-export const chatService = new ChatService() 
+export const chatService = createChatService()
