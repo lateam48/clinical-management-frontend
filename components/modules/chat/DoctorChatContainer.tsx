@@ -2,16 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { ChatInterface } from '@/components/modules/chat/ChatInterface'
+import { ChatInterface } from '@/components/modules/chat'
 import { useChat } from '@/hooks/UseChat'
 import { ChatParticipant } from '@/types/chat'
-// import { webSocketService } from '@/services/WebSocketService'
-import { LoadingContent } from '@/components/global/loading-content'
-import { MessageCircle } from 'lucide-react'
-import { useChatStore } from '@/stores/ChtatStore'
+import { webSocketService } from '@/services/WebSocketService'
 
 export function DoctorChatContainer() {
   const { data: session } = useSession()
+  const [selectedParticipant, setSelectedParticipant] = useState<ChatParticipant | null>(null)
   const [isClient, setIsClient] = useState(false)
   const [renderKey, setRenderKey] = useState(0)
 
@@ -21,25 +19,15 @@ export function DoctorChatContainer() {
     setRenderKey(prev => prev + 1)
   }, [])
 
-  // Set current user ID for message filtering
-  useEffect(() => {
-    const currentUserId = session?.user?.id ? parseInt(session.user.id as string) : null
-    if (currentUserId) {
-      setCurrentUserId(currentUserId)
-    }
-  }, [session?.user?.id])
-
   // Connect to WebSocket when the component mounts
-  // useEffect(() => {
-  //   webSocketService.connect()
+  useEffect(() => {
+    webSocketService.connect()
 
-  //   return () => {
-  //     webSocketService.disconnect()
-  //   }
-  // }, [])
+    return () => {
+      webSocketService.disconnect()
+    }
+  }, [])
 
-  const { setCurrentUserId } = useChatStore()
-  
   const {
     participants,
     messages,
@@ -54,19 +42,22 @@ export function DoctorChatContainer() {
     deleteMessage,
     deleteAllMessages,
     markAsRead,
-    markAsReadBySender,
-    selectParticipant,
-    selectedParticipant: hookSelectedParticipant
+    markAsReadBySender
   } = useChat()
 
   const handleSelectParticipant = (participant: ChatParticipant) => {
-    selectParticipant(participant)
-    // Removed automatic markAsRead to prevent error toast on page load
+    setSelectedParticipant(participant)
+    markAsRead(participant.id)
   }
 
   const handleSendMessage = (content: string) => {
-    // Use REST API instead of WebSocket
-    sendMessage(content)
+    if (selectedParticipant) {
+      webSocketService.sendMessage('/app/chat.private', {
+        sender: session?.user?.name || 'doctor',
+        recipient: selectedParticipant.name,
+        content,
+      })
+    }
   }
 
   const handleAddReaction = (messageId: number, emoji: string) => {
@@ -85,10 +76,17 @@ export function DoctorChatContainer() {
     markAsReadBySender(senderId)
   }
 
-  const currentUserId = session?.user?.id ? parseInt(session.user.id as string) : null
+  const currentUserId = 2
 
   if (isLoading) {
-    return <LoadingContent icon={MessageCircle} loadingText="Chargement du chat..." className="h-64" />
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2" />
+          <p>Chargement du chat...</p>
+        </div>
+      </div>
+    )
   }
 
   if (error) {
@@ -118,7 +116,7 @@ export function DoctorChatContainer() {
         <ChatInterface
           participants={participants}
           messages={messages}
-          selectedParticipant={hookSelectedParticipant}
+          selectedParticipant={selectedParticipant}
           onSelectParticipant={handleSelectParticipant}
           onSendMessage={handleSendMessage}
           onAddReaction={handleAddReaction}
@@ -132,7 +130,6 @@ export function DoctorChatContainer() {
           unreadCount={unreadCount}
           title="Chat - Docteur"
           participantRole="SECRETARY"
-          reverseDisplay={true}
         />
       </div>
     </div>
