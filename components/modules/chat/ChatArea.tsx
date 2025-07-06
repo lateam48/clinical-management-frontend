@@ -101,17 +101,19 @@ export function ChatArea({
             />
           ) : (
             <>
-              {messages.map((message) => (
-                <MessageBubble
-                  key={message.id}
-                  message={message}
-                  isOwnMessage={isOwnMessage(message)}
-                  onAddReaction={onAddReaction}
-                  onDeleteMessage={onDeleteMessage}
-                  currentUserId={currentUserId}
-                  reverseDisplay={reverseDisplay}
-                />
-              ))}
+              {messages
+                .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                .map((message) => (
+                  <MessageBubble
+                    key={message.id}
+                    message={message}
+                    isOwnMessage={isOwnMessage(message)}
+                    onAddReaction={onAddReaction}
+                    onDeleteMessage={onDeleteMessage}
+                    currentUserId={currentUserId}
+                    reverseDisplay={reverseDisplay}
+                  />
+                ))}
               <div ref={messagesEndRef} />
             </>
           )}
