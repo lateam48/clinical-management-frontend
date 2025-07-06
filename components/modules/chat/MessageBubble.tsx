@@ -67,13 +67,10 @@ export function MessageBubble({
   // Use the real sender name from the message
   const senderName = message.senderName || ''
 
-  const shouldShowOnRight = reverseDisplay ? !isOwnMessage : isOwnMessage
-  const shouldShowBlueBackground = reverseDisplay ? !isOwnMessage : isOwnMessage
-
-  // Debug logs for reverseDisplay
-  console.log('MessageBubble - reverseDisplay:', reverseDisplay)
-  console.log('MessageBubble - shouldShowOnRight:', shouldShowOnRight)
-  console.log('MessageBubble - shouldShowBlueBackground:', shouldShowBlueBackground)
+  // Own messages go to the left with gray background
+  // Received messages go to the right with blue background
+  const shouldShowOnRight = !isOwnMessage
+  const shouldShowBlueBackground = !isOwnMessage
 
   return (
     <div className={`flex gap-3 ${shouldShowOnRight ? 'justify-end' : 'justify-start'}`}>

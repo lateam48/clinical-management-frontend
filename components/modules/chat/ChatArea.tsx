@@ -38,10 +38,17 @@ export function ChatArea({
   reverseDisplay = false,
 }: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive, but only if user is already at bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (container) {
+      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+      if (isAtBottom) {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
   }, [messages]);
 
   const isOwnMessage = (message: ChatMessage) => message.senderId === currentUserId;
@@ -86,7 +93,7 @@ export function ChatArea({
 
       <CardContent className="flex-1 flex flex-col p-0">
         {/* Messages area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-3">
+        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-3">
           {!selectedParticipant ? (
             <EmptyState
               icon={MessageCircle}
