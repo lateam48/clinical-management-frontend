@@ -61,7 +61,7 @@ export function DoctorChatContainer() {
 
   const handleSelectParticipant = (participant: ChatParticipant) => {
     selectParticipant(participant)
-    markAsRead(participant.id)
+    // Removed automatic markAsRead to prevent error toast on page load
   }
 
   const handleSendMessage = (content: string) => {

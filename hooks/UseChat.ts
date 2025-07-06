@@ -236,9 +236,8 @@ export const useChat = () => {
       queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(currentConversation?.id) });
     },
     onError: (error) => {
-      toast.error('Erreur', {
-        description: 'Impossible de marquer comme lu',
-      });
+      console.error('Error marking as read:', error);
+      // Removed toast to prevent unwanted error messages
     },
   });
 
@@ -254,9 +253,8 @@ export const useChat = () => {
       toast.success('Messages marqués comme lus');
     },
     onError: (error) => {
-      toast.error('Erreur', {
-        description: 'Impossible de marquer les messages comme lus'
-      });
+      console.error('Error marking messages as read:', error);
+      // Removed toast to prevent unwanted error messages on page load
     },
   });
 
