@@ -5,13 +5,13 @@ import { useSession } from 'next-auth/react'
 import { ChatInterface } from '@/components/modules/chat/ChatInterface'
 import { useChat } from '@/hooks/UseChat'
 import { ChatParticipant } from '@/types/chat'
-import { webSocketService } from '@/services/WebSocketService'
+// import { webSocketService } from '@/services/WebSocketService'
 import { LoadingContent } from '@/components/global/loading-content'
 import { MessageCircle } from 'lucide-react'
+import { useChatStore } from '@/stores/ChtatStore'
 
 export function SecretaryChatContainer() {
   const { data: session } = useSession()
-  const [selectedParticipant, setSelectedParticipant] = useState<ChatParticipant | null>(null)
   const [isClient, setIsClient] = useState(false)
 
   // Handle hydration
@@ -21,16 +21,26 @@ export function SecretaryChatContainer() {
     }
   }, [isClient])
 
-  // Connect to WebSocket when the component mounts
+  // Set current user ID for message filtering
   useEffect(() => {
-    webSocketService.connect()
-
-    // Disconnect from WebSocket when the component unmounts
-    return () => {
-      webSocketService.disconnect()
+    const currentUserId = session?.user?.id ? parseInt(session.user.id as string) : null
+    if (currentUserId) {
+      setCurrentUserId(currentUserId)
     }
-  }, [])
+  }, [session?.user?.id])
 
+  // Connect to WebSocket when the component mounts
+  // useEffect(() => {
+  //   webSocketService.connect()
+
+  //   // Disconnect from WebSocket when the component unmounts
+  //   return () => {
+  //     webSocketService.disconnect()
+  //   }
+  // }, [])
+
+  const { setCurrentUserId } = useChatStore()
+  
   const {
     participants,
     messages,
@@ -45,22 +55,19 @@ export function SecretaryChatContainer() {
     deleteMessage,
     deleteAllMessages,
     markAsRead,
-    markAsReadBySender
+    markAsReadBySender,
+    selectParticipant,
+    selectedParticipant: hookSelectedParticipant
   } = useChat()
 
   const handleSelectParticipant = (participant: ChatParticipant) => {
-    setSelectedParticipant(participant)
+    selectParticipant(participant)
     markAsRead(participant.id)
   }
 
   const handleSendMessage = (content: string) => {
-    if (selectedParticipant) {
-      webSocketService.sendMessage('/app/chat.private', {
-        sender: session?.user?.name || 'secretary',
-        recipient: selectedParticipant.name,
-        content,
-      })
-    }
+    // Use REST API instead of WebSocket
+    sendMessage(content)
   }
 
   const handleAddReaction = (messageId: number, emoji: string) => {
@@ -110,7 +117,7 @@ export function SecretaryChatContainer() {
     <ChatInterface
       participants={participants}
       messages={messages}
-      selectedParticipant={selectedParticipant}
+      selectedParticipant={hookSelectedParticipant}
       onSelectParticipant={handleSelectParticipant}
       onSendMessage={handleSendMessage}
       onAddReaction={handleAddReaction}

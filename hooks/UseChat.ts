@@ -91,7 +91,7 @@ export const useChat = () => {
       return data;
     },
     enabled: isClient,
-    refetchInterval: 3000, // Poll every 3 seconds for new messages
+    refetchInterval: 1000, // Poll every 1 second for new messages
     refetchIntervalInBackground: true,
     onSettled: (data, error) => {
       if (error) {
@@ -112,7 +112,7 @@ export const useChat = () => {
       return data;
     },
     enabled: isClient,
-    refetchInterval: 5000, // Poll every 5 seconds for unread count
+    refetchInterval: 2000, // Poll every 2 seconds for unread count
     refetchIntervalInBackground: true,
     onSettled: (data, error) => {
       if (error) {
