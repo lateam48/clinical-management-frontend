@@ -43,13 +43,18 @@ export function ChatArea({
   // Auto-scroll to bottom when new messages arrive, but only if user is already at bottom
   useEffect(() => {
     const container = messagesContainerRef.current;
-    if (container) {
-      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
-      if (isAtBottom) {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (container && messages.length > 0) {
+      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+      const isUserScrolling = container.scrollTop < container.scrollHeight - container.clientHeight - 50;
+      
+      // Only auto-scroll if user is at the bottom or very close to it
+      if (isAtBottom && !isUserScrolling) {
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
       }
     }
-  }, [messages]);
+  }, [messages.length]); // Only trigger on message count change, not content change
 
   const isOwnMessage = (message: ChatMessage) => message.senderId === currentUserId;
 
