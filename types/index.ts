@@ -28,5 +28,7 @@ export interface ApiError {
 // export types
 
 export * from "./user"
-export * from "./chat"
 export * from "./prescription"
+export * from "./chat"
+export * from "./appointment"
+export * from "./invoice"
