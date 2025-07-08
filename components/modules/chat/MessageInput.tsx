@@ -124,7 +124,7 @@ export function MessageInput({
           ref={textareaRef}
           value={message}
           onChange={handleTextareaChange}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
           placeholder={placeholder}
           disabled={disabled || isLoading}
           className="min-h-[40px] max-h-[120px] resize-none pr-12"

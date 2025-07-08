@@ -16,8 +16,8 @@ import { ChatMessage } from '@/types/chat'
 interface MessageBubbleProps {
   message: ChatMessage
   isOwnMessage: boolean
-  onAddReaction: (messageId: number, emoji: string) => void
-  onDeleteMessage?: (messageId: number) => void
+  onAddReaction: (messageId: string, emoji: string) => void
+  onDeleteMessage?: (messageId: string) => void
 }
 
 export function MessageBubble({
@@ -72,7 +72,7 @@ export function MessageBubble({
         <Avatar className="h-8 w-8 mt-1">
           <AvatarImage src="/avatars/default.jpg" />
           <AvatarFallback className="text-xs">
-            {senderName.split(' ').map(n => n[0]).join('')}
+            {senderName.split(' ').map(n => n[0]).join('').slice(0, 2)}
           </AvatarFallback>
         </Avatar>
       )}

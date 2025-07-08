@@ -7,15 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { EmptyState } from '@/components/global/empty-state';
+import { EmptyState } from '@/components/global';
 import { ChatMessage, ChatParticipant } from '@/types/chat';
 
 interface ChatAreaProps {
   messages: ChatMessage[];
   selectedParticipant: ChatParticipant | null;
   onSendMessage: (content: string) => void;
-  onAddReaction: (messageId: number, emoji: string) => void;
-  onDeleteMessage?: (messageId: number) => void;
+  onAddReaction: (messageId: string, emoji: string) => void;
+  onDeleteMessage?: (messageId: string) => void;
   onMarkAsRead?: (senderId: number) => void;
   isSending?: boolean;
   isMarkingAsRead?: boolean;
@@ -62,7 +62,6 @@ export function ChatArea({
 
   // Refactor nested ternary for messages area
   let messagesContent;
-  // const sortedMessages = [...messages].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   const sortedMessages = messages.toSorted((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   if (!selectedParticipant) {
     messagesContent = (

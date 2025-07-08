@@ -1,31 +1,28 @@
-import { useEffect, useCallback, useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useCallback, useState, useMemo } from 'react'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { queryClient } from '@/providers'
 import { chatService } from '@/services/ChatService'
-import { useChatStore } from '@/stores/ChtatStore'
+import { useChatStore } from '@/stores/chatStore'
+import { useUserStore } from '@/stores/userStore'
 import { toast } from 'sonner'
-import { SendMessageRequest } from '@/types/chat'
+import { SendMessageRequest, ChatParticipant } from '@/types'
 
 export const useChat = () => {
-  const queryClient = useQueryClient()
   const [isClient, setIsClient] = useState(false)
   
+  const user = useUserStore((state) => state.user)
   const {
     conversations,
     currentConversation,
     messages,
     participants,
     selectedParticipant,
-    isLoading,
-    error,
     unreadCount,
     setConversations,
-    setCurrentConversation,
     setMessages,
     addMessage,
     setParticipants,
     setSelectedParticipant,
-    setLoading,
-    setError,
     setUnreadCount,
     markMessageAsRead,
     addReactionToMessage,
@@ -40,12 +37,12 @@ export const useChat = () => {
   }, [])
 
   // Query Keys
-  const CHAT_KEYS = {
+  const CHAT_KEYS = useMemo(() => ({
     conversations: ['chat', 'conversations'],
     participants: ['chat', 'participants'],
     messages: (userId?: number) => ['chat', 'messages', userId],
     unreadCount: ['chat', 'unread-count']
-  }
+  }), []);
 
   // Fetch conversations
   const conversationsQuery = useQuery({
@@ -56,14 +53,8 @@ export const useChat = () => {
         setConversations(response.data)
         return response.data
       }
-      throw new Error(response.message || 'Erreur lors du chargement des conversations')
+      return []
     },
-    onError: (error) => {
-      setError(error.message)
-      toast.error('Erreur', {
-        description: 'Impossible de charger les conversations'
-      })
-    }
   })
 
   // Fetch participants
@@ -75,17 +66,10 @@ export const useChat = () => {
         setParticipants(response.data)
         return response.data
       }
-      throw new Error(response.message || 'Erreur lors du chargement des participants')
+      return []
     },
-    onError: (error) => {
-      setError(error.message)
-      toast.error('Erreur', {
-        description: 'Impossible de charger les participants'
-      })
-    }
   })
 
-  // Fetch messages for a specific conversation
   const messagesQuery = useQuery({
     queryKey: CHAT_KEYS.messages(selectedParticipant?.id),
     queryFn: async () => {
@@ -95,15 +79,9 @@ export const useChat = () => {
         setMessages(response.data)
         return response.data
       }
-      throw new Error(response.message || 'Erreur lors du chargement des messages')
+      return []
     },
     enabled: !!selectedParticipant && isClient,
-    onError: (error) => {
-      setError(error.message)
-      toast.error('Erreur', {
-        description: 'Impossible de charger les messages'
-      })
-    }
   })
 
   // Fetch unread count
@@ -115,12 +93,9 @@ export const useChat = () => {
         setUnreadCount(response.data)
         return response.data
       }
-      throw new Error(response.message || 'Erreur lors du chargement du nombre de messages non lus')
+      return 0
     },
     enabled: isClient,
-    onError: (error) => {
-      setError(error.message)
-    }
   })
 
   // Send message mutation
@@ -130,18 +105,16 @@ export const useChat = () => {
       if (response.success) {
         return response.data
       }
-      throw new Error(response.message || 'Erreur lors de l\'envoi du message')
     },
     onSuccess: (newMessage) => {
-      addMessage(newMessage)
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations })
-      queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount })
-      toast.success('Message envoyé')
+      if (newMessage) {
+        addMessage(newMessage);
+        queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations });
+        queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount });
+      }
     },
-    onError: (error) => {
-      toast.error('Erreur', {
-        description: 'Impossible d\'envoyer le message'
-      })
+    onError: () => {
+      toast.error('Erreur lors de l\'envoi du message')
     }
   })
 
@@ -152,23 +125,21 @@ export const useChat = () => {
       if (response.success) {
         return { messageId, emoji }
       }
-      throw new Error(response.message || 'Erreur lors de l\'ajout de la réaction')
+      throw new Error(response.message ?? 'Erreur lors de l\'ajout de la réaction')
     },
     onSuccess: ({ messageId, emoji }) => {
+      // Create a MessageReaction object and update the store
       const newReaction = {
         id: Date.now().toString(),
         emoji,
-        userId: 1, // Mock current user ID
-        userName: 'Dr. Martin Dupont', // Mock current user name
+        userId: user?.id ?? 0,
+        userName: user ? `${user.firstName} ${user.lastName}`.trim() : '',
         timestamp: new Date().toISOString()
-      }
-      addReactionToMessage(messageId, newReaction)
-      toast.success('Réaction ajoutée')
+      };
+      addReactionToMessage(messageId, newReaction);
     },
-    onError: (error) => {
-      toast.error('Erreur', {
-        description: 'Impossible d\'ajouter la réaction'
-      })
+    onError: () => {
+      toast.error('Erreur lors de l\'ajout de la réaction')
     }
   })
 
@@ -179,16 +150,14 @@ export const useChat = () => {
       if (response.success) {
         return response.data
       }
-      throw new Error(response.message || 'Erreur lors du marquage comme lu')
+      return null
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount })
       queryClient.invalidateQueries({ queryKey: CHAT_KEYS.messages(selectedParticipant?.id) })
     },
-    onError: (error) => {
-      toast.error('Erreur', {
-        description: 'Impossible de marquer comme lu'
-      })
+    onError: () => {
+      toast.error('Erreur lors du marquage comme lu')
     }
   })
 
@@ -199,16 +168,13 @@ export const useChat = () => {
       if (response.success) {
         return response.data
       }
-      throw new Error(response.message || 'Erreur lors de la suppression du message')
+      return null
     },
     onSuccess: (_, messageId) => {
       removeMessage(messageId)
-      toast.success('Message supprimé')
     },
-    onError: (error) => {
-      toast.error('Erreur', {
-        description: 'Impossible de supprimer le message'
-      })
+    onError: () => {
+      toast.error('Erreur lors de la suppression du message')
     }
   })
 
@@ -219,23 +185,20 @@ export const useChat = () => {
       if (response.success) {
         return response.data
       }
-      throw new Error(response.message || 'Erreur lors de la suppression de tous les messages')
+      return null
     },
     onSuccess: () => {
       clearMessages()
       queryClient.invalidateQueries({ queryKey: CHAT_KEYS.conversations })
       queryClient.invalidateQueries({ queryKey: CHAT_KEYS.unreadCount })
-      toast.success('Tous les messages ont été supprimés')
     },
-    onError: (error) => {
-      toast.error('Erreur', {
-        description: 'Impossible de supprimer tous les messages'
-      })
+    onError: () => {
+      toast.error('Erreur lors de la suppression de tous les messages')
     }
   })
 
   // Actions
-  const selectParticipant = useCallback((participant: any) => {
+  const selectParticipant = useCallback((participant: ChatParticipant) => {
     setSelectedParticipant(participant)
     if (participant) {
       markAsReadMutation.mutate(participant.id)
@@ -275,7 +238,7 @@ export const useChat = () => {
     }, 30000) // Refresh every 30 seconds
 
     return () => clearInterval(interval)
-  }, [queryClient, isClient])
+  }, [isClient, CHAT_KEYS])
 
   return {
     // State
@@ -284,8 +247,8 @@ export const useChat = () => {
     messages,
     participants,
     selectedParticipant,
-    isLoading: isLoading || conversationsQuery.isLoading || participantsQuery.isLoading || messagesQuery.isLoading,
-    error,
+    isLoading: conversationsQuery.isLoading || participantsQuery.isLoading || messagesQuery.isLoading,
+    error: conversationsQuery.error || participantsQuery.error || messagesQuery.error || unreadCountQuery.error,
     unreadCount,
     isClient,
 

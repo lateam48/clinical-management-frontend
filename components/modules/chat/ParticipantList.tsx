@@ -54,7 +54,11 @@ export function ParticipantList({
                   <>
                     <Avatar className="h-6 w-6">
                       <AvatarFallback className="text-xs">
-                        {selectedParticipant.name.split(' ').map(n => n[0]).join('')}
+                        {selectedParticipant.name
+                          .split(' ')
+                          .map(n => n[0])
+                          .join('')
+                          .slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <span className="truncate">{selectedParticipant.name}</span>

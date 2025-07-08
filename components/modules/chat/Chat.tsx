@@ -2,22 +2,22 @@
 
 import { useSession } from 'next-auth/react'
 import { useEffect } from 'react'
-import { useChatStore } from '@/stores/ChtatStore'
-import { useChat } from '@/hooks/UseChat'
+import { useChatStore } from '@/stores/chatStore'
+import { useChat } from '@/hooks/useChat'
 import { ChatInterface } from './ChatInterface'
 import { CHAT_ROLES, ChatRole, roleLabels } from '@/lib/chat'
 
 export function Chat() {
   const { data: session } = useSession()
+  const { setCurrentUserId } = useChatStore()
 
   useEffect(() => {
-    const currentUserId = session?.user?.id ? parseInt(session.user.id as string) : undefined
+    const currentUserId = session?.user?.id ? parseInt(session.user.id) : undefined
     if (currentUserId !== undefined) {
       setCurrentUserId(currentUserId)
     }
-  }, [session?.user?.id])
+  }, [session?.user?.id, setCurrentUserId])
 
-  const { setCurrentUserId } = useChatStore()
   
   const {
     participants,
@@ -55,8 +55,8 @@ export function Chat() {
     selectedParticipant: hookSelectedParticipant,
     onSelectParticipant: selectParticipant,
     onSendMessage: sendMessage,
-    onAddReaction: addReaction,
-    onDeleteMessage: deleteMessage,
+    onAddReaction: (messageId, emoji) => addReaction(String(messageId), emoji),
+    onDeleteMessage: (messageId) => deleteMessage(String(messageId)),
     onDeleteAllMessages: deleteAllMessages,
     isSending,
     isDeletingAll,

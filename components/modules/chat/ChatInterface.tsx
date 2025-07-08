@@ -15,8 +15,8 @@ interface ChatInterfaceProps {
   selectedParticipant: ChatParticipant | null;
   onSelectParticipant: (participant: ChatParticipant) => void;
   onSendMessage: (content: string) => void;
-  onAddReaction: (messageId: number, emoji: string) => void;
-  onDeleteMessage?: (messageId: number) => void;
+  onAddReaction: (messageId: string, emoji: string) => void;
+  onDeleteMessage?: (messageId: string) => void;
   onDeleteAllMessages?: () => void;
   onMarkAsRead?: (senderId: number) => void;
   isSending?: boolean;

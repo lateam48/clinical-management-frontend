@@ -4,7 +4,7 @@ export interface ChatMessage {
   senderId: number
   senderName: string
   senderRole: 'DOCTOR' | 'SECRETARY'
-  timestamp: string
+  createdAt: string
   isRead: boolean
   reactions: MessageReaction[]
   attachments?: ChatAttachment[]
@@ -47,7 +47,7 @@ export interface ChatParticipant {
 // WebSocket Events
 export interface WebSocketMessage {
   type: 'message' | 'reaction' | 'typing' | 'read' | 'online_status'
-  data: any
+  data: unknown
   timestamp: string
 }
 
