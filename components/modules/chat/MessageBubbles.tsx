@@ -15,7 +15,7 @@ export function MessageBubbles({
   currentUserId, 
   onAddReaction, 
   onDeleteMessage 
-}: MessageBubblesProps) {
+}: Readonly<MessageBubblesProps>) {
   return (
     <div className="space-y-4">
       {messages.map((message) => (
@@ -25,7 +25,6 @@ export function MessageBubbles({
           isOwnMessage={message.senderId === currentUserId}
           onAddReaction={onAddReaction}
           onDeleteMessage={onDeleteMessage}
-          currentUserId={currentUserId}
         />
       ))}
     </div>

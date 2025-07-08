@@ -13,4 +13,5 @@ export { MessageBubbles } from './MessageBubbles'
 export { MessageInput } from './MessageInput'
 
 // Utility components
-export { NotificationBadge } from './NotificationBadge' 
+export { NotificationBadge } from './NotificationBadge'
+export * from "./Chat"

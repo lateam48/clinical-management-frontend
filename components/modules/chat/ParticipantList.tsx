@@ -20,7 +20,6 @@ interface ParticipantListProps {
   title: string
   placeholder: string
   emptyMessage: string
-  currentUserId?: number
 }
 
 export function ParticipantList({
@@ -30,8 +29,7 @@ export function ParticipantList({
   title,
   placeholder,
   emptyMessage,
-  currentUserId
-}: ParticipantListProps) {
+}: Readonly<ParticipantListProps>) {
   const [isClient, setIsClient] = useState(false)
 
   // Handle hydration

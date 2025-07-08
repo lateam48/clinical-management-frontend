@@ -7,7 +7,7 @@ interface NotificationBadgeProps {
   className?: string
 }
 
-export function NotificationBadge({ count = 0, className }: NotificationBadgeProps) {
+export function NotificationBadge({ count = 0, className }: Readonly<NotificationBadgeProps>) {
   if (count === 0) return null
 
   return (

@@ -28,7 +28,7 @@ export function MessageInput({
   disabled = false,
   placeholder = "Tapez votre message...",
   isLoading = false
-}: MessageInputProps) {
+}: Readonly<MessageInputProps>) {
   const [message, setMessage] = useState('')
   const [showEmojis, setShowEmojis] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)

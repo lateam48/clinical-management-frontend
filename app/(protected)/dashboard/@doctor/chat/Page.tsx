@@ -1,5 +1,5 @@
-import { DoctorChatContainer } from '@/components/modules/chat/DoctorChatContainer'
+import { Chat } from '@/components/modules/chat'
 
 export default function DoctorChatPage() {
-  return <DoctorChatContainer />
+  return <Chat />
 }

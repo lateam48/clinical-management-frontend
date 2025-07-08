@@ -1,5 +1,5 @@
-import { SecretaryChatContainer } from '@/components/modules/chat/SecretaryChatContainer'
+import { Chat } from '@/components/modules/chat'
 
 export default function SecretaryChatPage() {
-  return <SecretaryChatContainer />
+  return <Chat />
 }

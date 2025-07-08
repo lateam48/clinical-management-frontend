@@ -20,8 +20,7 @@ export function ContactSelector({
   title,
   placeholder,
   emptyMessage,
-  currentUserId
-}: ContactSelectorProps) {
+}: Readonly<ContactSelectorProps>) {
   return (
     <ParticipantList
       participants={participants}
@@ -30,7 +29,6 @@ export function ContactSelector({
       title={title}
       placeholder={placeholder}
       emptyMessage={emptyMessage}
-      currentUserId={currentUserId}
     />
   )
 }
