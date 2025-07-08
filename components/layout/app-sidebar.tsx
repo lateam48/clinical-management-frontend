@@ -40,7 +40,7 @@ export function AppSidebar({ session }: AppSidebarProps) {
             .toUpperCase() || "U"
 
     return (
-        <Sidebar>
+        <Sidebar suppressHydrationWarning>
             <SidebarHeader>
                 <div className="flex items-center gap-3 px-2 py-4">
                     <Avatar className="h-8 w-8">
