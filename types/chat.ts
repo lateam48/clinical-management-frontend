@@ -36,12 +36,13 @@ export interface ChatRoom {
 }
 
 export interface ChatParticipant {
-  id: number
-  name: string
-  role: 'DOCTOR' | 'SECRETARY'
-  avatar?: string
-  isOnline: boolean
-  lastSeen?: string
+  id: number;
+  name: string;
+  username: string;
+  role: 'DOCTOR' | 'SECRETARY';
+  avatar?: string;
+  isOnline: boolean;
+  lastSeen?: string;
 }
 
 // WebSocket Events
@@ -52,9 +53,9 @@ export interface WebSocketMessage {
 }
 
 export interface SendMessageRequest {
-  content: string
-  recipientId: number
-  attachments?: File[]
+  content: string;
+  recipientName: string;
+  attachments?: File[];
 }
 
 export interface SendReactionRequest {

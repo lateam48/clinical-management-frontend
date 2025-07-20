@@ -22,6 +22,7 @@ interface ChatStore {
   clearMessages: () => void
   updateParticipantStatus: (participantId: number, isOnline: boolean) => void
   setCurrentUserId: (id: number) => void;
+  replaceMessage: (messageId: string, newMessage: ChatMessage) => void
 }
 
 export const useChatStore = create<ChatStore>((set) => ({
@@ -61,4 +62,9 @@ export const useChatStore = create<ChatStore>((set) => ({
     )
   })),
   setCurrentUserId: (id) => set({ currentUserId: id }),
+  replaceMessage: (messageId, newMessage) => set((state) => ({
+    messages: state.messages.map((msg) =>
+      msg.id === messageId ? newMessage : msg
+    )
+  })),
 })) 

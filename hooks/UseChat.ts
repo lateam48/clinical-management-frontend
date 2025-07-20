@@ -1,11 +1,14 @@
 import { useEffect, useCallback, useState, useMemo } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { queryClient } from '@/providers'
-import { chatService } from '@/services/ChatService'
+import { chatService } from '@/services/chatService'
 import { useChatStore } from '@/stores/chatStore'
 import { useUserStore } from '@/stores/userStore'
 import { toast } from 'sonner'
 import { SendMessageRequest, ChatParticipant } from '@/types'
+import { chatWebSocketService } from '@/lib/chat'
+import { getSession } from 'next-auth/react'
+import { useStaff } from '@/hooks/useUsers'
 
 export const useChat = () => {
   const [isClient, setIsClient] = useState(false)
@@ -31,6 +34,26 @@ export const useChat = () => {
     updateParticipantStatus
   } = useChatStore()
 
+  // Fetch staff as chat participants
+  const { getStaff } = useStaff();
+  useEffect(() => {
+    if (getStaff.data) {
+      setParticipants(
+        getStaff.data
+          .filter(user => user.role === 'DOCTOR' || user.role === 'SECRETARY')
+          .map((user) => ({
+            id: user.id,
+            name: (user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : user.email || '',
+            username: user.username || user.email,
+            role: user.role as 'DOCTOR' | 'SECRETARY',
+            avatar: 'avatar' in user ? (user as { avatar?: string }).avatar : undefined,
+            isOnline: false,
+            lastSeen: undefined,
+          }))
+      );
+    }
+  }, [getStaff.data, setParticipants]);
+
   // Fix hydration issue
   useEffect(() => {
     setIsClient(true)
@@ -39,7 +62,6 @@ export const useChat = () => {
   // Query Keys
   const CHAT_KEYS = useMemo(() => ({
     conversations: ['chat', 'conversations'],
-    participants: ['chat', 'participants'],
     messages: (userId?: number) => ['chat', 'messages', userId],
     unreadCount: ['chat', 'unread-count']
   }), []);
@@ -51,19 +73,6 @@ export const useChat = () => {
       const response = await chatService.getConversations()
       if (response.success) {
         setConversations(response.data)
-        return response.data
-      }
-      return []
-    },
-  })
-
-  // Fetch participants
-  const participantsQuery = useQuery({
-    queryKey: CHAT_KEYS.participants,
-    queryFn: async () => {
-      const response = await chatService.getParticipants()
-      if (response.success) {
-        setParticipants(response.data)
         return response.data
       }
       return []
@@ -213,7 +222,7 @@ export const useChat = () => {
     
     sendMessageMutation.mutate({
       content,
-      recipientId: selectedParticipant.id
+      recipientName: selectedParticipant.username
     })
   }, [selectedParticipant, sendMessageMutation])
 
@@ -240,6 +249,49 @@ export const useChat = () => {
     return () => clearInterval(interval)
   }, [isClient, CHAT_KEYS])
 
+  // --- WebSocket Integration ---
+  useEffect(() => {
+    let disconnect: (() => void) | undefined;
+    let active = true;
+    (async () => {
+      if (!user) return;
+      const session = await getSession();
+      const token = session?.accessToken;
+      if (!token) return;
+      chatWebSocketService.connect(token);
+      disconnect = chatWebSocketService.onEvent((event) => {
+        if (!active) return;
+        switch (event.type) {
+          case 'message': {
+            const message = event.data as import('@/types').ChatMessage;
+            addMessage(message);
+            break;
+          }
+          case 'reaction': {
+            const data = event.data as { messageId: string; reaction: import('@/types').MessageReaction };
+            if (data && data.messageId && data.reaction) {
+              addReactionToMessage(data.messageId, data.reaction);
+            }
+            break;
+          }
+          case 'online_status': {
+            const data = event.data as { participantId: number; isOnline: boolean };
+            if (data && typeof data.participantId === 'number' && typeof data.isOnline === 'boolean') {
+              updateParticipantStatus(data.participantId, data.isOnline);
+            }
+            break;
+          }
+          // Add more event types as needed
+        }
+      });
+    })();
+    return () => {
+      active = false;
+      chatWebSocketService.disconnect();
+      if (disconnect) disconnect();
+    };
+  }, [user, addMessage, addReactionToMessage, updateParticipantStatus]);
+
   return {
     // State
     conversations,
@@ -247,8 +299,8 @@ export const useChat = () => {
     messages,
     participants,
     selectedParticipant,
-    isLoading: conversationsQuery.isLoading || participantsQuery.isLoading || messagesQuery.isLoading,
-    error: conversationsQuery.error || participantsQuery.error || messagesQuery.error || unreadCountQuery.error,
+    isLoading: conversationsQuery.isLoading || messagesQuery.isLoading,
+    error: conversationsQuery.error || messagesQuery.error || unreadCountQuery.error,
     unreadCount,
     isClient,
 
