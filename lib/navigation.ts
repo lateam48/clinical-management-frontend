@@ -3,11 +3,7 @@ import {
   LayoutDashboard,
   Users,
   Calendar,
-  BarChart3,
-  Settings,
   FileText,
-  User,
-  Stethoscope,
   MessageCircle,
   Receipt,
   Building,
@@ -30,24 +26,6 @@ export const navigationConfig: NavigationItem[] = [
   },
   // Admin
   {
-    title: "Utilisateurs",
-    href: "/dashboard/users",
-    icon: Users,
-    roles: [UserRoles.ADMIN],
-  },
-  {
-    title: "Docteurs",
-    href: "/dashboard/doctors",
-    icon: Stethoscope,
-    roles: [UserRoles.ADMIN],
-  },
-  {
-    title: "Secrétaires",
-    href: "/dashboard/secretaries",
-    icon: User,
-    roles: [UserRoles.ADMIN],
-  },
-  {
     title: "Rendez-vous",
     href: "/dashboard/appointments",
     icon: Calendar,
@@ -60,30 +38,18 @@ export const navigationConfig: NavigationItem[] = [
     roles: [UserRoles.ADMIN],
   },
   {
-    title: "Statistiques",
-    href: "/dashboard/statistics",
-    icon: BarChart3,
-    roles: [UserRoles.ADMIN],
-  },
-  {
     title: "Informations Hôpital",
     href: "/dashboard/hospital",
     icon: Building,
     roles: [UserRoles.ADMIN],
   },
   {
-    title: "Paramètres",
-    href: "/dashboard/settings",
-    icon: Settings,
+    title: "Utilisateurs",
+    href: "/dashboard/users",
+    icon: Users,
     roles: [UserRoles.ADMIN],
   },
   // Doctor
-  {
-    title: "Patients",
-    href: "/dashboard/patients",
-    icon: Users,
-    roles: [UserRoles.DOCTOR],
-  },
   {
     title: "Rendez-vous",
     href: "/dashboard/appointments",
@@ -102,23 +68,11 @@ export const navigationConfig: NavigationItem[] = [
     icon: MessageCircle,
     roles: [UserRoles.DOCTOR],
   },
-  {
-    title: "Paramètres",
-    href: "/dashboard/settings",
-    icon: Settings,
-    roles: [UserRoles.DOCTOR],
-  },
   // Secretary
   {
     title: "Rendez-vous",
     href: "/dashboard/appointments",
     icon: Calendar,
-    roles: [UserRoles.SECRETARY],
-  },
-  {
-    title: "Patients",
-    href: "/dashboard/patients",
-    icon: Users,
     roles: [UserRoles.SECRETARY],
   },
   {
@@ -128,15 +82,15 @@ export const navigationConfig: NavigationItem[] = [
     roles: [UserRoles.SECRETARY],
   },
   {
-    title: "Messagerie",
-    href: "/dashboard/chat",
-    icon: MessageCircle,
+    title: "Patients",
+    href: "/dashboard/patients",
+    icon: Users,
     roles: [UserRoles.SECRETARY],
   },
   {
-    title: "Paramètres",
-    href: "/dashboard/settings",
-    icon: Settings,
+    title: "Messagerie",
+    href: "/dashboard/chat",
+    icon: MessageCircle,
     roles: [UserRoles.SECRETARY],
   },
 ];
