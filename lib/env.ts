@@ -7,6 +7,7 @@ export function getEnv() {
     apiUrl: process.env.NEXT_PUBLIC_API_URL,
     authUrl: process.env.NEXTAUTH_URL,
     authSecret: process.env.NEXTAUTH_SECRET,
+    wsUrl: process.env.NEXT_PUBLIC_WS_URL,
   };
 
   Object.entries(env).forEach(([key, value]) => {

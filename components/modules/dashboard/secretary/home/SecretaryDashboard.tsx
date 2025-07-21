@@ -10,7 +10,7 @@ import { useTodayAppointments } from "@/hooks/useAppointments"
 
 export function SecretaryDashboard() {
     const { getPatients } = usePatients();
-    const { data: todayAppointments, isLoading } = useTodayAppointmen
+    const { data: todayAppointments, isLoading } = useTodayAppointments()
     const { getUnpaidInvoices } = useInvoices({});
 
 

@@ -46,15 +46,15 @@ export const AdminInvoiceManagement: React.FC = () => {
   });
 
   // Préparation des données pour le graphique (paiements par jour)
-  const paidInvoices = getPaidInvoices.data || [];
   const chartData = useMemo(() => {
+    const paidInvoices = getPaidInvoices.data || [];
     const map = new Map();
     paidInvoices.forEach(inv => {
       const date = new Date(inv.datePaid || inv.issuedAt).toLocaleDateString('fr-FR');
       map.set(date, (map.get(date) || 0) + inv.amount);
     });
     return Array.from(map.entries()).map(([date, total]) => ({ date, total }));
-  }, [paidInvoices]);
+  }, [getPaidInvoices.data]);
 
   const totalPaid = getTotalPaid.data ?? 0;
 
