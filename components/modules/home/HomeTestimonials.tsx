@@ -47,7 +47,8 @@ export function HomeTestimonials() {
                                             {testimonial.name
                                                 .split(" ")
                                                 .map((n) => n[0])
-                                                .join("")}
+                                                .join("")
+                                                .slice(0, 2)}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>

@@ -25,7 +25,7 @@ interface AppSidebarProps {
     session: AuthSession
 }
 
-export function AppSidebar({ session }: AppSidebarProps) {
+export function AppSidebar({ session }: Readonly<AppSidebarProps>) {
     const pathname = usePathname()
     const user = session?.user
 
@@ -37,14 +37,15 @@ export function AppSidebar({ session }: AppSidebarProps) {
             ?.split(" ")
             .map((n) => n[0])
             .join("")
-            .toUpperCase() || "U"
+            .toUpperCase()
+            .slice(0, 2) ?? "U"
 
     return (
-        <Sidebar>
+        <Sidebar suppressHydrationWarning>
             <SidebarHeader>
                 <div className="flex items-center gap-3 px-2 py-4">
                     <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.image || ""} alt={user.name || ""} />
+                        <AvatarImage src={user.image ?? ""} alt={user.name ?? ""} />
                         <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">

@@ -28,7 +28,8 @@ export function UserNav({ session }: Readonly<UserNavProps>) {
             ?.split(" ")
             .map((n) => n[0])
             .join("")
-            .toUpperCase() ?? "U"
+            .toUpperCase()
+            .slice(0, 2) ?? "U"
 
     return (
         <DropdownMenu>

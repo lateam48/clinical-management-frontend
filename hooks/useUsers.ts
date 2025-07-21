@@ -1,3 +1,4 @@
+
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { userServices } from "@/services/usersServices"
 import { queryClient } from '@/providers';
@@ -17,6 +18,9 @@ export const useUser = ({ userId }: {
             queryClient.invalidateQueries({
                 queryKey: [UsersCacheKeys.Users]
             })
+            toast.success("Succès", {
+                description: "Utilisateur créé avec succès",
+            })
         },
         onError: (error: ApiError) => {
             toast.error("Erreur", {
@@ -31,6 +35,9 @@ export const useUser = ({ userId }: {
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [UsersCacheKeys.Users]
+            })
+            toast.success("Succès", {
+                description: "Utilisateur mis à jour avec succès",
             })
         },
         onError: (error: ApiError) => {
@@ -49,10 +56,19 @@ export const useUser = ({ userId }: {
 
     const deleteUser = useMutation({
         mutationFn: (userId: User['id']) => userServices.delete(userId),
-        onSuccess: () =>
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [UsersCacheKeys.Users]
             })
+            toast.success("Succès", {
+                description: "Utilisateur supprimé avec succès",
+            })
+        },
+        onError: (error: ApiError) => {
+            toast.error("Erreur", {
+                description: error.response?.data?.message ?? "Impossible de supprimer l'utilisateur",
+            })
+        }
     })
 
     return {
@@ -74,5 +90,33 @@ export const useUsers = (filters?: { role?: UserRole }) => {
 
     return {
         getUsers
+    }
+}
+
+// Staff hooks
+
+export const useStaff = (filters?: { role?: UserRole }) => {
+    const getStaff = useQuery({
+        queryKey: [UsersCacheKeys.Staff, filters],
+        queryFn: () => userServices.getAllStaff(filters?.role)
+    })
+
+    return {
+        getStaff
+    }
+}
+
+export const useStaffMember = ({ staffId }: {
+    staffId?: User['id']
+}) => {
+    const getStaffMember = useQuery({
+        queryKey: [UsersCacheKeys.Staff, staffId],
+        queryFn: () =>
+            userServices.getStaffById(staffId as User['id']),
+        enabled: !!staffId
+    })
+
+    return {
+        getStaffMember
     }
 }
