@@ -20,7 +20,7 @@ function mapParticipant(raw: unknown): ChatParticipant {
     username: (obj.username as string) || (obj.email as string) || '',
     role: ((obj.role as string) || 'DOCTOR') as 'DOCTOR' | 'SECRETARY',
     avatar: (obj.avatar as string) || undefined,
-    isOnline: (obj.isOnline as boolean) ?? false,
+    isOnline: (obj.isOnline as boolean) ?? true,
     lastSeen: (obj.lastSeen as string) || undefined,
   };
 }

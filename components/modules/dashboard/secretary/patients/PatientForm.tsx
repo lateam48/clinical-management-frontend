@@ -2,10 +2,9 @@
 
 import React from "react";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PatientRequestData, Gender } from '@/types/patient';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DialogFooter } from '@/components/ui/dialog';
 import {
@@ -44,11 +43,11 @@ const patientSchema = z.object({
 type PatientFormProps = {
   initialData?: Partial<PatientRequestData>,
   onSubmit: (data: PatientRequestData) => void,
-  onError?: (errors: any) => void,
+  onError?: (errors: FieldErrors<PatientRequestData>) => void,
   loading: boolean
 };
 
-export function PatientForm({ initialData, onSubmit, onError, loading }: PatientFormProps) {
+export function PatientForm({ initialData, onSubmit, onError, loading }: Readonly<PatientFormProps>) {
   const form = useForm<PatientRequestData>({
     resolver: zodResolver(patientSchema),
     mode: "onBlur",
@@ -61,7 +60,7 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
 
   React.useEffect(() => {
     form.reset(initialData || {});
-  }, [initialData, form.reset]);
+  }, [initialData, form.reset, form]);
 
   // Focus sur le premier champ en erreur
   React.useEffect(() => {
@@ -69,7 +68,7 @@ export function PatientForm({ initialData, onSubmit, onError, loading }: Patient
       const firstErrorField = Object.keys(form.formState.errors)[0] as keyof PatientRequestData;
       form.setFocus(firstErrorField);
     }
-  }, [form.formState.errors, form.setFocus]);
+  }, [form.formState.errors, form.setFocus, form]);
 
   const handleFormSubmit = form.handleSubmit(
     (data: PatientRequestData) => {

@@ -36,7 +36,11 @@ export const useChatStore = create<ChatStore>((set) => ({
   setConversations: (conversations) => set({ conversations }),
   setCurrentConversation: (conversation) => set({ currentConversation: conversation }),
   setMessages: (messages) => set({ messages }),
-  addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
+  addMessage: (message) => set((state) => ({
+    messages: state.messages.some((m) => m.id === message.id)
+      ? state.messages
+      : [...state.messages, message]
+  })),
   setParticipants: (participants) => set({ participants }),
   setSelectedParticipant: (participant) => set({ selectedParticipant: participant }),
   setUnreadCount: (count) => set({ unreadCount: count }),

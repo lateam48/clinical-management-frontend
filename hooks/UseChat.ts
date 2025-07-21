@@ -5,10 +5,10 @@ import { chatService } from '@/services/chatService'
 import { useChatStore } from '@/stores/chatStore'
 import { useUserStore } from '@/stores/userStore'
 import { toast } from 'sonner'
-import { SendMessageRequest, ChatParticipant } from '@/types'
-import { chatWebSocketService } from '@/lib/chat'
+import { SendMessageRequest, ChatParticipant, ChatMessage } from '@/types';
 import { getSession } from 'next-auth/react'
 import { useStaff } from '@/hooks/useUsers'
+import { stompChatService } from '@/lib/chat';
 
 export const useChat = () => {
   const [isClient, setIsClient] = useState(false)
@@ -85,7 +85,14 @@ export const useChat = () => {
       if (!selectedParticipant) return []
       const response = await chatService.getConversation(selectedParticipant.id)
       if (response.success) {
-        setMessages(response.data)
+        // Merge new messages with existing ones, avoiding duplicates
+        const allMessages = [...messages];
+        response.data.forEach((msg) => {
+          if (!allMessages.some((m) => m.id === msg.id)) {
+            allMessages.push(msg);
+          }
+        });
+        setMessages(allMessages);
         return response.data
       }
       return []
@@ -249,7 +256,7 @@ export const useChat = () => {
     return () => clearInterval(interval)
   }, [isClient, CHAT_KEYS])
 
-  // --- WebSocket Integration ---
+  // --- WebSocket Integration (STOMP/SockJS) ---
   useEffect(() => {
     let disconnect: (() => void) | undefined;
     let active = true;
@@ -258,39 +265,25 @@ export const useChat = () => {
       const session = await getSession();
       const token = session?.accessToken;
       if (!token) return;
-      chatWebSocketService.connect(token);
-      disconnect = chatWebSocketService.onEvent((event) => {
+      stompChatService.connect(token);
+      disconnect = stompChatService.onMessage((message) => {
         if (!active) return;
-        switch (event.type) {
-          case 'message': {
-            const message = event.data as import('@/types').ChatMessage;
-            addMessage(message);
-            break;
-          }
-          case 'reaction': {
-            const data = event.data as { messageId: string; reaction: import('@/types').MessageReaction };
-            if (data && data.messageId && data.reaction) {
-              addReactionToMessage(data.messageId, data.reaction);
-            }
-            break;
-          }
-          case 'online_status': {
-            const data = event.data as { participantId: number; isOnline: boolean };
-            if (data && typeof data.participantId === 'number' && typeof data.isOnline === 'boolean') {
-              updateParticipantStatus(data.participantId, data.isOnline);
-            }
-            break;
-          }
-          // Add more event types as needed
+        const msg = message as ChatMessage;
+        // Only add if the message is for the current conversation
+        if (
+          selectedParticipant &&
+          (msg.senderId === selectedParticipant.id || msg.senderId === user?.id)
+        ) {
+          addMessage(msg);
         }
       });
     })();
     return () => {
       active = false;
-      chatWebSocketService.disconnect();
+      stompChatService.disconnect();
       if (disconnect) disconnect();
     };
-  }, [user, addMessage, addReactionToMessage, updateParticipantStatus]);
+  }, [user, addMessage, selectedParticipant]);
 
   return {
     // State

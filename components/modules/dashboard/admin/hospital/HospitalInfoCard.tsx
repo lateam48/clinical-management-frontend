@@ -10,12 +10,13 @@ import { MoreHorizontal, Edit, Trash2, Building, MapPin, Phone, Mail, ImageIcon 
 import type { HospitalInfo } from "@/types/hospital"
 import { HospitalInfoForm, DeleteHospitalInfoDialog } from "@/components/modules/dashboard/admin/hospital"
 import { hospitalService } from "@/services/hospitalService"
+import Image from "next/image"
 
 interface HospitalInfoCardProps {
   hospitalInfo: HospitalInfo        
 }
 
-export function HospitalInfoCard({ hospitalInfo }: HospitalInfoCardProps) {
+export function HospitalInfoCard({ hospitalInfo }: Readonly<HospitalInfoCardProps>) {
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
@@ -67,9 +68,11 @@ export function HospitalInfoCard({ hospitalInfo }: HospitalInfoCardProps) {
                 </div>
                 <div className="flex justify-center">
                   <div className="w-24 h-24 border rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-                    <img
+                    <Image
                       src={logoUrl ?? "/placeholder.svg"}
                       alt={`Logo de ${hospitalInfo.name}`}
+                      width={200}
+                      height={200}
                       className="w-full h-full object-cover"
                     />
                   </div>

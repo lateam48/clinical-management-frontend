@@ -1,6 +1,9 @@
 // Central chat configuration
 
 import { UserRoles } from '@/types';
+import { getEnv } from '@/lib/env';
+import { Client, IMessage } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 export const CHAT_ROLES = [UserRoles.DOCTOR, UserRoles.SECRETARY, UserRoles.ADMIN] as const;
 export type ChatRole = typeof CHAT_ROLES[number];
@@ -94,5 +97,68 @@ class ChatWebSocketService {
 // chatWebSocketService.onEvent(cb)
 
 export const chatWebSocketService = new ChatWebSocketService(
-  process.env.NEXT_PUBLIC_CHAT_WS_URL || 'http://localhost:8888/ws'
+  getEnv().wsUrl ?? ""
 );
+
+// --- STOMP/SockJS Chat Service ---
+type StompMessageListener = (msg: unknown) => void;
+
+class StompChatService {
+  private client: Client | null = null;
+  private messageListeners: StompMessageListener[] = [];
+  private connected = false;
+
+  connect(token: string) {
+    if (this.client) {
+      this.disconnect();
+    }
+    this.client = new Client({
+      webSocketFactory: () => new SockJS(getEnv().wsUrl || 'http://localhost:8888/ws'),
+      connectHeaders: {
+        Authorization: `Bearer ${token}`,
+      },
+      debug: () => {},
+      reconnectDelay: 5000,
+    });
+    this.client.onConnect = () => {
+      this.connected = true;
+      // Subscribe to private queue for messages
+      this.client?.subscribe('/user/queue/messages', (message: IMessage) => {
+        try {
+          const data = JSON.parse(message.body);
+          this.messageListeners.forEach((cb) => cb(data));
+        } catch {}
+      });
+    };
+    this.client.onDisconnect = () => {
+      this.connected = false;
+    };
+    this.client.activate();
+  }
+
+  disconnect() {
+    if (this.client) {
+      this.client.deactivate();
+      this.client = null;
+      this.connected = false;
+    }
+  }
+
+  onMessage(cb: StompMessageListener) {
+    this.messageListeners.push(cb);
+    return () => {
+      this.messageListeners = this.messageListeners.filter((l) => l !== cb);
+    };
+  }
+
+  sendMessage(destination: string, body: unknown) {
+    if (this.client && this.connected) {
+      this.client.publish({
+        destination,
+        body: JSON.stringify(body),
+      });
+    }
+  }
+}
+
+export const stompChatService = new StompChatService();

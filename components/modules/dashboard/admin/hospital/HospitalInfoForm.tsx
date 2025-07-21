@@ -24,6 +24,7 @@ import { Upload, X } from "lucide-react"
 import type { HospitalInfo } from "@/types/hospital"
 import { useHospital } from "@/hooks/useHospital"
 import { hospitalService } from "@/services/hospitalService"
+import Image from "next/image"
 
 const hospitalInfoSchema = z.object({
   name: z.string().min(1, "Le nom de l'hôpital est requis").max(100, "Le nom ne peut pas dépasser 100 caractères"),
@@ -222,8 +223,10 @@ export function HospitalInfoForm({ open, onOpenChange, hospitalInfo, mode }: Hos
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 border rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-                        <img
+                        <Image
                           src={currentLogoUrl ?? "/placeholder.svg"}
+                          width={200}
+                          height={200}
                           alt="Logo actuel"
                           className="w-full h-full object-cover"
                         />
@@ -245,8 +248,10 @@ export function HospitalInfoForm({ open, onOpenChange, hospitalInfo, mode }: Hos
                   <CardContent className="p-4">
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 border rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-                        <img
+                        <Image
                           src={previewUrl ?? "/placeholder.svg"}
+                          width={200}
+                          height={200}
                           alt="Aperçu"
                           className="w-full h-full object-cover"
                         />

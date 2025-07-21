@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { FC, useEffect, useState } from 'react';
-import { User, Calendar, BadgeCheck, BadgeX, FileText, CreditCard, X } from 'lucide-react';
+import { User, Calendar, BadgeCheck, BadgeX, FileText, CreditCard} from 'lucide-react';
 
 interface InvoiceDetailModalProps {
   invoice: Invoice | null;
