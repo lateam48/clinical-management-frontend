@@ -29,3 +29,6 @@ export interface ApiError {
 
 export * from "./user"
 export * from "./prescription"
+export * from "./chat"
+export * from "./appointment"
+export * from "./invoice"

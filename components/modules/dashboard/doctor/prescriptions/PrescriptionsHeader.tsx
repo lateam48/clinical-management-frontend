@@ -27,24 +27,25 @@ export function PrescriptionsHeader({
 
   return (
     <>
-      <Card className="mb-6">
+      <Card className="mb-6 w-full">
         <CardHeader>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2">
-              <FileText className="h-8 w-8" />
+              <FileText className="h-6 w-6 sm:h-8 sm:w-8" />
               <div>
-                <CardTitle className="text-3xl font-bold tracking-tight">
+                <CardTitle className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">
                   Gestion des prescriptions
                 </CardTitle>
-                <CardDescription className="text-base">
+                <CardDescription className="text-sm sm:text-base">
                   Gérez les prescriptions médicales dans le système ({totalCount} au total)
                 </CardDescription>
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => setShowCreateDialog(true)} size="default" className="bg-primary hover:bg-primary/90">
+              <Button onClick={() => setShowCreateDialog(true)} size="default" className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
-                Nouvelle prescription
+                <span className="hidden sm:inline">Nouvelle prescription</span>
+                <span className="sm:hidden">Nouvelle</span>
               </Button>
             </div>
           </div>
@@ -52,13 +53,13 @@ export function PrescriptionsHeader({
         
         <CardContent>
           <div className="flex items-center space-x-2">
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative flex-1 max-w-sm w-full">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Rechercher des prescriptions..."
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-8"
+                className="pl-8 w-full"
               />
             </div>
           </div>
